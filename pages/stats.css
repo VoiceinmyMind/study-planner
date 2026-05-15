@@ -1,0 +1,19 @@
+body {
+    background: #020617;
+    color: white;
+    font-family: Arial;
+    padding: 50px;
+}
+
+.stats-container {
+    display: flex;
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.stat-box {
+    background: #1e293b;
+    padding: 40px;
+    border-radius: 20px;
+    width: 250px;
+}

@@ -1,22 +1,234 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Study Planner</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Study Planner</title>
+
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>📚 Study Planner Demo</h1>
+<nav>
 
-<p>Wie viele Prüfungen hast du?</p>
-<input type="number" id="exams" />
+    <h1>Study Planner</h1>
 
-<button onclick="generatePlan()">Plan erstellen</button>
+    <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="pages/subjects.html">Subjects</a></li>
+        <li><a href="pages/flashcards.html">Flashcards</a></li>
+        <li><a href="pages/stats.html">Statistics</a></li>
+    </ul>
 
-<h2>Dein Lernplan:</h2>
-<ul id="plan"></ul>
+    <button id="settingsBtn">
+        Study Setup
+    </button>
 
-<script src="script.js"></script>
+</nav>
+
+<div class="setup-modal" id="setupModal">
+
+    <div class="setup-content">
+
+        <h2>Setup Your Study Program</h2>
+
+        <div class="setup-grid">
+
+            <div class="setup-card">
+
+                <label>University / FH</label>
+
+                <select id="university">
+
+                    <option value="fh">
+                        FH Münster
+                    </option>
+
+                    <option value="uni">
+                        University of Münster
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="setup-card">
+
+                <label>Degree</label>
+
+                <select id="degree">
+
+                    <option value="informatics">
+                        Business Informatics
+                    </option>
+
+                    <option value="chemistry">
+                        Chemistry
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+        <button id="saveSetup">
+            Generate Study Plan
+        </button>
+
+    </div>
+
+</div>
+
+<section class="hero">
+
+    <h2>Organize your learning smarter.</h2>
+
+    <p>
+        AI-powered study planner with
+        intelligent learning support.
+    </p>
+
+</section>
+
+<section class="dashboard-grid">
+
+    <a href="pages/subjects.html" class="card">
+
+        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop">
+
+        <div class="overlay">
+            <h3>Subjects</h3>
+            <p>Open your learning subjects</p>
+        </div>
+
+    </a>
+
+    <a href="pages/flashcards.html" class="card">
+
+        <img src="https://images.unsplash.com/photo-1513258496099-48168024aec0?q=80&w=1200&auto=format&fit=crop">
+
+        <div class="overlay">
+            <h3>Flashcards</h3>
+            <p>Study with smart flashcards</p>
+        </div>
+
+    </a>
+
+    <a href="pages/stats.html" class="card">
+
+        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1200&auto=format&fit=crop">
+
+        <div class="overlay">
+            <h3>Statistics</h3>
+            <p>Track your progress</p>
+        </div>
+
+    </a>
+    <a href="pages/chatbot.html" class="card">
+
+    <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=1200&auto=format&fit=crop">
+
+    <div class="overlay">
+        <h3>AI Chatbot</h3>
+        <p>Get AI learning assistance</p>
+    </div>
+
+</a>
+
+<a href="pages/notifications.html" class="card">
+
+    <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200&auto=format&fit=crop">
+
+    <div class="overlay">
+        <h3>Notifications</h3>
+        <p>Stay organized with reminders</p>
+    </div>
+
+</a>
+
+<a href="pages/timer.html" class="card">
+
+    <img src="https://images.unsplash.com/photo-1506784365847-bbad939e9335?q=80&w=1200&auto=format&fit=crop">
+
+    <div class="overlay">
+        <h3>Study Timer</h3>
+        <p>Start focused learning sessions</p>
+    </div>
+
+</a>
+
+<div class="card disabled">
+
+    <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=1200&auto=format&fit=crop">
+
+    <div class="overlay">
+        <h3>File Uploads</h3>
+        <p>Coming Soon (Premium)</p>
+    </div>
+
+</div>
+
+<div class="card disabled">
+
+    <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=1200&auto=format&fit=crop">
+
+    <div class="overlay">
+        <h3>Study Groups</h3>
+        <p>Coming Soon (Premium)</p>
+    </div>
+
+</div>
+
+</section>
+
+<script>
+
+const modal =
+    document.getElementById("setupModal");
+
+const settingsBtn =
+    document.getElementById("settingsBtn");
+
+const saveBtn =
+    document.getElementById("saveSetup");
+
+settingsBtn.onclick = () => {
+    modal.style.display = "flex";
+};
+
+saveBtn.onclick = () => {
+
+    const university =
+        document.getElementById("university").value;
+
+    const degree =
+        document.getElementById("degree").value;
+
+    localStorage.setItem(
+        "university",
+        university
+    );
+
+    localStorage.setItem(
+        "degree",
+        degree
+    );
+
+    modal.style.display = "none";
+};
+
+window.onload = () => {
+
+    if(!localStorage.getItem("degree")) {
+        modal.style.display = "flex";
+    }
+
+};
+
+</script>
+
 </body>
 </html>

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Flashcards</title>
+
+    <link rel="stylesheet"
+          href="flashcards.css">
+</head>
+<body>
+
+<nav>
+
+    <a href="../index.html">
+        ← Home
+    </a>
+
+</nav>
+
+<div class="container">
+
+    <h1>Flashcards</h1>
+
+    <div class="selectors">
+
+        <div>
+
+            <label>Select Semester</label>
+
+            <select id="semesterSelect">
+
+                <option value="1">
+                    Semester 1
+                </option>
+
+                <option value="2">
+                    Semester 2
+                </option>
+
+                <option value="3">
+                    Semester 3
+                </option>
+
+            </select>
+
+        </div>
+
+        <div>
+
+            <label>Select Subject</label>
+
+            <select id="subjectSelect"></select>
+
+        </div>
+
+    </div>
+
+    <div class="flashcard">
+
+        <h2 id="question">
+            Select a subject first
+        </h2>
+
+        <button onclick="showAnswer()">
+            Show Answer
+        </button>
+
+        <p id="answer"></p>
+
+    </div>
+
+    <button class="next-btn"
+            onclick="nextCard()">
+
+        Next Random Card
+
+    </button>
+
+</div>
+
+<script>
+
+const degree =
+    localStorage.getItem("degree");
+
+const subjects = {
+
+    informatics: {
+
+        1: [
+            "Programming 1",
+            "Mathematics",
+            "Business Management"
+        ],
+
+        2: [
+            "Databases",
+            "Web Development",
+            "Statistics"
+        ],
+
+        3: [
+            "Software Engineering",
+            "Networks",
+            "Accounting"
+        ],
+
+        4: [
+            "Cyber Security",
+            "Project Management",
+            "AI Basics"
+        ],
+
+        5: [
+            "Cloud Computing",
+            "Machine Learning",
+            "IT Consulting"
+        ],
+
+        6: [
+            "Bachelor Thesis",
+            "Business Analytics",
+            "ERP Systems"
+        ]
+
+    },
+
+    chemistry: {
+
+        1: [
+            "Organic Chemistry",
+            "Physics",
+            "Laboratory Basics"
+        ],
+
+        2: [
+            "Biochemistry",
+            "Chemical Analysis",
+            "Thermodynamics"
+        ],
+
+        3: [
+            "Inorganic Chemistry",
+            "Molecular Biology",
+            "Analytical Chemistry"
+        ],
+
+        4: [
+            "Pharmaceutical Chemistry",
+            "Environmental Chemistry",
+            "Spectroscopy"
+        ],
+
+        5: [
+            "Advanced Synthesis",
+            "Toxicology",
+            "Biotechnology"
+        ],
+
+        6: [
+            "Bachelor Thesis",
+            "Research Methods",
+            "Chemical Engineering"
+        ]
+
+    }
+
+};
+
+const flashcards = {
+
+    "Programming 1": [
+
+        {
+            q: "What is a variable?",
+            a: "A container for storing data"
+        },
+
+        {
+            q: "What does HTML stand for?",
+            a: "HyperText Markup Language"
+        },
+
+        {
+            q: "What is a function?",
+            a: "Reusable block of code"
+        },
+
+        {
+            q: "What is JavaScript used for?",
+            a: "Interactive websites"
+        },
+
+        {
+            q: "What does CSS do?",
+            a: "Styles websites"
+        }
+
+    ],
+
+    "Mathematics": [
+
+        {
+            q: "What is 5 x 5?",
+            a: "25"
+        },
+
+        {
+            q: "What is a derivative?",
+            a: "Rate of change"
+        },
+
+        {
+            q: "What is Pi?",
+            a: "3.14159"
+        }
+
+    ],
+
+    "Databases": [
+
+        {
+            q: "What is SQL?",
+            a: "Database query language"
+        },
+
+        {
+            q: "What is a table?",
+            a: "Structure storing data"
+        },
+
+        {
+            q: "What is a primary key?",
+            a: "Unique identifier"
+        },
+
+        {
+            q: "What is MySQL?",
+            a: "Database management system"
+        }
+
+    ],
+
+    "Cyber Security": [
+
+        {
+            q: "What is phishing?",
+            a: "Fake attempt to steal data"
+        },
+
+        {
+            q: "What is malware?",
+            a: "Malicious software"
+        },
+
+        {
+            q: "What does VPN stand for?",
+            a: "Virtual Private Network"
+        }
+
+    ],
+
+    "Organic Chemistry": [
+
+        {
+            q: "What is CH4?",
+            a: "Methane"
+        },
+
+        {
+            q: "What is carbon?",
+            a: "Chemical element"
+        },
+
+        {
+            q: "What is ethanol?",
+            a: "Alcohol compound"
+        },
+
+        {
+            q: "What is a molecule?",
+            a: "Group of atoms"
+        }
+
+    ],
+
+    "Physics": [
+
+        {
+            q: "What is gravity?",
+            a: "Force attracting objects"
+        },
+
+        {
+            q: "Who discovered gravity?",
+            a: "Isaac Newton"
+        },
+
+        {
+            q: "What is velocity?",
+            a: "Speed in a direction"
+        }
+
+    ],
+
+    "Biochemistry": [
+
+        {
+            q: "What is DNA?",
+            a: "Genetic material"
+        },
+
+        {
+            q: "What is protein?",
+            a: "Molecule made of amino acids"
+        },
+
+        {
+            q: "What is ATP?",
+            a: "Energy carrier in cells"
+        }
+
+    ],
+
+    "AI Basics": [
+
+        {
+            q: "What does AI stand for?",
+            a: "Artificial Intelligence"
+        },
+
+        {
+            q: "What is machine learning?",
+            a: "AI learning from data"
+        },
+
+        {
+            q: "What is a neural network?",
+            a: "AI model inspired by the brain"
+        }
+
+    ]
+
+};
+
+const semesterSelect =
+    document.getElementById("semesterSelect");
+
+const subjectSelect =
+    document.getElementById("subjectSelect");
+
+function loadSubjects() {
+
+    const semester =
+        semesterSelect.value;
+
+    subjectSelect.innerHTML = "";
+
+    const semesterSubjects =
+        subjects[degree][semester] || [];
+
+    semesterSubjects.forEach(subject => {
+
+        const option =
+            document.createElement("option");
+
+        option.textContent = subject;
+
+        subjectSelect.appendChild(option);
+
+    });
+
+}
+
+semesterSelect.addEventListener(
+    "change",
+    loadSubjects
+);
+
+loadSubjects();
+
+const question =
+    document.getElementById("question");
+
+const answer =
+    document.getElementById("answer");
+
+function showAnswer() {
+    answer.style.display = "block";
+}
+
+function nextCard() {
+
+    const selectedSubject =
+        subjectSelect.value;
+
+    const cards =
+        flashcards[selectedSubject];
+
+    if(!cards) {
+
+        question.innerText =
+            "No flashcards yet";
+
+        answer.innerText = "";
+
+        return;
+    }
+
+    const random =
+        Math.floor(Math.random() * cards.length);
+
+    question.innerText =
+        cards[random].q;
+
+    answer.innerText =
+        cards[random].a;
+
+    answer.style.display = "none";
+}
+
+</script>
+
+</body>
+</html>
