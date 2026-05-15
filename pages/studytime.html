@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Study Time</title>
+
+    <link rel="stylesheet"
+          href="studytime.css">
+</head>
+<body>
+
+<nav>
+
+    <a href="../index.html">
+        ← Home
+    </a>
+
+</nav>
+
+<div class="container">
+
+    <h1>Focus Study Mode</h1>
+
+    <p>
+        Set a timer and fully focus on learning.
+    </p>
+
+    <div class="timer-settings">
+
+        <input type="number"
+               id="minutesInput"
+               placeholder="Minutes (Max 180)">
+
+        <button onclick="startFocusMode()">
+            Start Focus Session
+        </button>
+
+        <button class="test-btn"
+                onclick="startTestMode()">
+
+            3s Test
+
+        </button>
+
+    </div>
+
+    <div class="timer-box">
+
+        <div class="timer"
+             id="timer">
+
+            00:00
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="focus-overlay"
+     id="focusOverlay">
+
+    <div class="overlay-content">
+
+        <h2>Focus Mode Active</h2>
+
+        <p>
+            Stay concentrated until the timer ends.
+        </p>
+
+        <div class="overlay-timer"
+             id="overlayTimer">
+
+            00:00
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="success-modal"
+     id="successModal">
+
+    <div class="success-content">
+
+        <h2>
+            Great Job! 🎉
+        </h2>
+
+        <p>
+            Your study session is complete.
+        </p>
+
+        <img id="catImage"
+             src="">
+
+        <button onclick="closeModal()">
+            Continue
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+const catImages = [
+
+    "https://images.unsplash.com/photo-1511044568932-338cba0ad803?q=80&w=1200&auto=format&fit=crop",
+
+    "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?q=80&w=1200&auto=format&fit=crop",
+
+    "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=1200&auto=format&fit=crop",
+
+    "https://images.unsplash.com/photo-1574158622682-e40e69881006?q=80&w=1200&auto=format&fit=crop",
+
+    "https://images.unsplash.com/photo-1533738363-b7f9aef128ce?q=80&w=1200&auto=format&fit=crop",
+
+    "https://images.unsplash.com/photo-1519052537078-e6302a4968d4?q=80&w=1200&auto=format&fit=crop"
+
+];
+
+let currentCat =
+    Number(
+        localStorage.getItem("catIndex")
+    ) || 0;
+
+let time = 0;
+
+let timerInterval = null;
+
+const timer =
+    document.getElementById("timer");
+
+const overlayTimer =
+    document.getElementById("overlayTimer");
+
+const focusOverlay =
+    document.getElementById("focusOverlay");
+
+const successModal =
+    document.getElementById("successModal");
+
+function updateTimer() {
+
+    const minutes =
+        Math.floor(time / 60);
+
+    const seconds =
+        time % 60;
+
+    const formatted =
+        `${minutes}:${
+            seconds < 10 ? "0" : ""
+        }${seconds}`;
+
+    timer.innerText =
+        formatted;
+
+    overlayTimer.innerText =
+        formatted;
+}
+
+function startFocusMode() {
+
+    const minutes =
+        Number(
+            document.getElementById(
+                "minutesInput"
+            ).value
+        );
+
+    if(!minutes || minutes <= 0) {
+        return;
+    }
+
+    // MAX 3 HOURS
+    if(minutes > 180) {
+
+        alert(
+            "Maximum study time is 3 hours."
+        );
+
+        return;
+    }
+
+    time = minutes * 60;
+
+    startTimer();
+}
+
+function startTestMode() {
+
+    time = 3;
+
+    startTimer();
+}
+
+function startTimer() {
+
+    updateTimer();
+
+    focusOverlay.style.display =
+        "flex";
+
+    clearInterval(timerInterval);
+
+    timerInterval = setInterval(() => {
+
+        if(time > 0) {
+
+            time--;
+
+            updateTimer();
+
+        } else {
+
+            clearInterval(timerInterval);
+
+            time = 0;
+
+            updateTimer();
+
+            focusOverlay.style.display =
+                "none";
+
+            document.getElementById(
+                "catImage"
+            ).src =
+                catImages[currentCat];
+
+            successModal.style.display =
+                "flex";
+
+            currentCat++;
+
+            if(currentCat >= catImages.length) {
+                currentCat = 0;
+            }
+
+            localStorage.setItem(
+                "catIndex",
+                currentCat
+            );
+
+        }
+
+    }, 1000);
+
+}
+
+function closeModal() {
+
+    successModal.style.display =
+        "none";
+}
+
+</script>
+
+</body>
+</html>

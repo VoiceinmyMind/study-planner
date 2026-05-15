@@ -1,33 +1,219 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fächer</title>
-    <link rel="stylesheet" href="subjects.css">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Subjects</title>
+
+    <link rel="stylesheet"
+          href="subjects.css">
 </head>
 <body>
 
-<h1>Deine Fächer</h1>
+<nav>
 
-<div class="subjects-grid">
-
-    <a href="timer.html" class="subject-card">
-        <h2>Mathematik</h2>
-        <p>Heute geplant • 30 Minuten</p>
+    <a href="../index.html">
+        ← Home
     </a>
 
-    <a href="timer.html" class="subject-card">
-        <h2>Informatik</h2>
-        <p>Heute geplant • 45 Minuten</p>
-    </a>
+</nav>
 
-    <a href="timer.html" class="subject-card">
-        <h2>Englisch</h2>
-        <p>Heute geplant • 20 Minuten</p>
-    </a>
+<div class="container">
+
+    <h1>Your Subjects</h1>
+
+    <div class="semester-box">
+
+        <label>Select Semester</label>
+
+        <select id="semesterSelect">
+
+            <option value="1">
+                Semester 1
+            </option>
+
+            <option value="2">
+                Semester 2
+            </option>
+
+            <option value="3">
+                Semester 3
+            </option>
+
+            <option value="4">
+                Semester 4
+            </option>
+
+            <option value="5">
+                Semester 5
+            </option>
+
+            <option value="6">
+                Semester 6
+            </option>
+
+        </select>
+
+    </div>
+
+    <div class="subjects-grid"
+         id="subjectsGrid">
+
+    </div>
 
 </div>
+
+<script>
+
+const degree =
+    localStorage.getItem("degree");
+
+const subjects = {
+
+    informatics: {
+
+        1: [
+            "Programming 1",
+            "Mathematics",
+            "Business Management"
+        ],
+
+        2: [
+            "Databases",
+            "Web Development",
+            "Statistics"
+        ],
+
+        3: [
+            "Software Engineering",
+            "Networks",
+            "Accounting"
+        ],
+
+        4: [
+            "Cyber Security",
+            "Project Management",
+            "AI Basics"
+        ],
+
+        5: [
+            "Cloud Computing",
+            "Machine Learning",
+            "IT Consulting"
+        ],
+
+        6: [
+            "Bachelor Thesis",
+            "Business Analytics",
+            "ERP Systems"
+        ]
+
+    },
+
+    chemistry: {
+
+        1: [
+            "Organic Chemistry",
+            "Physics",
+            "Laboratory Basics"
+        ],
+
+        2: [
+            "Biochemistry",
+            "Chemical Analysis",
+            "Thermodynamics"
+        ],
+
+        3: [
+            "Inorganic Chemistry",
+            "Molecular Biology",
+            "Analytical Chemistry"
+        ],
+
+        4: [
+            "Pharmaceutical Chemistry",
+            "Environmental Chemistry",
+            "Spectroscopy"
+        ],
+
+        5: [
+            "Advanced Synthesis",
+            "Toxicology",
+            "Biotechnology"
+        ],
+
+        6: [
+            "Bachelor Thesis",
+            "Research Methods",
+            "Chemical Engineering"
+        ]
+
+    }
+
+};
+
+const semesterSelect =
+    document.getElementById("semesterSelect");
+
+const subjectsGrid =
+    document.getElementById("subjectsGrid");
+
+function loadSubjects() {
+
+    subjectsGrid.innerHTML = "";
+
+    const semester =
+        semesterSelect.value;
+
+    const semesterSubjects =
+        subjects[degree][semester] || [];
+
+    semesterSubjects.forEach(subject => {
+
+        const completed =
+            localStorage.getItem(subject);
+
+        const card =
+            document.createElement("a");
+
+        card.href =
+            `timer.html?subject=${subject}`;
+
+        card.className =
+            "subject-card";
+
+        card.innerHTML = `
+
+            <h2>${subject}</h2>
+
+            <p>
+                30 Minute Study Session
+            </p>
+
+            ${completed ?
+                '<span class="check">✔ Completed</span>'
+                :
+                ''
+            }
+
+        `;
+
+        subjectsGrid.appendChild(card);
+
+    });
+
+}
+
+semesterSelect.addEventListener(
+    "change",
+    loadSubjects
+);
+
+loadSubjects();
+
+</script>
 
 </body>
 </html>
