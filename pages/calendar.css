@@ -1,0 +1,105 @@
+body {
+
+    background: #020617;
+
+    color: white;
+
+    font-family: Arial;
+
+    margin: 0;
+
+    padding: 40px;
+}
+
+nav {
+
+    margin-bottom: 40px;
+}
+
+nav a {
+
+    text-decoration: none;
+
+    color: white;
+
+    background: #1e293b;
+
+    padding: 12px 20px;
+
+    border-radius: 12px;
+}
+
+.container {
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    min-height: 70vh;
+}
+
+.calendar-placeholder {
+
+    background: #111827;
+
+    padding: 50px;
+
+    border-radius: 30px;
+
+    width: 900px;
+
+    text-align: center;
+
+    border: 1px solid #1e293b;
+}
+
+.calendar-placeholder h1 {
+
+    font-size: 3rem;
+
+    margin-bottom: 20px;
+}
+
+.calendar-placeholder p {
+
+    color: #94a3b8;
+
+    margin-bottom: 40px;
+
+    font-size: 1.1rem;
+}
+
+.fake-calendar {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(7, 1fr);
+
+    gap: 15px;
+}
+
+.fake-calendar div {
+
+    background: #1e293b;
+
+    padding: 20px;
+
+    border-radius: 15px;
+}
+
+.day {
+
+    background: transparent !important;
+
+    font-weight: bold;
+
+    color: #38bdf8;
+}
+
+.active {
+
+    background: #38bdf8 !important;
+}

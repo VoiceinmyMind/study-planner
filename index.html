@@ -28,6 +28,36 @@
 
 </nav>
 
+<div class="top-section">
+
+    <div class="exam-alert"
+         id="examAlert">
+
+        <h3>
+            📚 Upcoming Exams:
+        </h3>
+
+        <p id="examAlertText">
+            No upcoming exams.
+        </p>
+
+    </div>
+
+    <section class="hero">
+
+        <h1>
+            Organize your learning smarter.
+        </h1>
+
+        <p>
+            AI-powered study planner with
+            intelligent learning support.
+        </p>
+
+    </section>
+
+</div>
+
 <div class="setup-modal" id="setupModal">
 
     <div class="setup-content">
@@ -82,17 +112,6 @@
 
 </div>
 
-<section class="hero">
-
-    <h2>Organize your learning smarter.</h2>
-
-    <p>
-        AI-powered study planner with
-        intelligent learning support.
-    </p>
-
-</section>
-
 <section class="dashboard-grid">
 
     <a href="pages/subjects.html" class="card">
@@ -114,6 +133,22 @@
             <h3>Flashcards</h3>
             <p>Study with smart flashcards</p>
         </div>
+
+    </a>
+
+    <a href="pages/calendar.html" class="card">
+
+    <img src="https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=1200&auto=format&fit=crop">
+
+    <div class="overlay">
+
+        <h3>Calendar</h3>
+
+        <p>
+            Manage exams and deadlines
+        </p>
+
+    </div>
 
     </a>
 
@@ -227,6 +262,105 @@ window.onload = () => {
     }
 
 };
+
+</script>
+
+<script>
+
+const examAlertText =
+    document.getElementById(
+        "examAlertText"
+    );
+
+const enabledNotifications = [];
+
+const examData =
+    JSON.parse(
+        localStorage.getItem(
+            "examData"
+        )
+    );
+
+const today =
+    new Date();
+
+Object.keys(localStorage).forEach(key => {
+
+    if(key.startsWith("notify_")) {
+
+        const subject =
+            key.replace("notify_", "");
+
+        let foundDate = null;
+
+        // SEARCH ALL EXAMS
+        Object.values(examData || {})
+            .forEach(semesters => {
+
+            Object.values(semesters)
+                .forEach(exams => {
+
+                exams.forEach(exam => {
+
+                    if(exam.subject === subject) {
+
+                        foundDate =
+                            exam.date;
+
+                    }
+
+                });
+
+            });
+
+        });
+
+        if(!foundDate) return;
+
+        const examDate =
+            new Date(foundDate);
+
+        const diffTime =
+            examDate - today;
+
+        const diffDays =
+            Math.ceil(
+                diffTime /
+                (1000 * 60 * 60 * 24)
+            );
+
+        if(diffDays <= 14 &&
+           diffDays >= 0) {
+
+            enabledNotifications.push(`
+
+                <div class="notification-item">
+                    📘 ${subject}
+                    (${diffDays}d)
+                </div>
+
+            `);
+
+        }
+
+    }
+
+});
+
+if(enabledNotifications.length > 0) {
+
+    examAlertText.innerHTML =
+        enabledNotifications.join("");
+
+} else {
+
+    examAlertText.innerHTML = `
+
+        No upcoming exams!
+
+    `;
+
+}
 
 </script>
 

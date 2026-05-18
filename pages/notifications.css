@@ -1,0 +1,123 @@
+body {
+    background: #020617;
+    color: white;
+    font-family: Arial;
+    margin: 0;
+    padding: 40px;
+}
+
+nav {
+    margin-bottom: 40px;
+}
+
+nav a {
+    text-decoration: none;
+    color: white;
+    background: #1e293b;
+    padding: 12px 20px;
+    border-radius: 12px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    color: #cbd5e1;
+    margin-bottom: 40px;
+}
+
+.semester-box {
+    margin-bottom: 40px;
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+select {
+    width: 100%;
+    padding: 18px;
+    border-radius: 15px;
+    border: none;
+    background: #1e293b;
+    color: white;
+}
+
+.exam-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(300px, 1fr));
+
+    gap: 25px;
+}
+
+.exam-card {
+    background: #111827;
+    padding: 30px;
+    border-radius: 25px;
+}
+
+.exam-card h2 {
+    margin-top: 0;
+}
+
+.exam-card p {
+    color: #cbd5e1;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    margin-top: 20px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    inset: 0;
+    background: #334155;
+    border-radius: 34px;
+    transition: 0.3s;
+}
+
+.slider:before {
+    content: "";
+
+    position: absolute;
+
+    height: 26px;
+    width: 26px;
+
+    left: 4px;
+    bottom: 4px;
+
+    background: white;
+
+    border-radius: 50%;
+
+    transition: 0.3s;
+}
+
+input:checked + .slider {
+    background: #38bdf8;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}

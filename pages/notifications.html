@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Notifications</title>
+
+    <link rel="stylesheet"
+          href="notifications.css">
+</head>
+<body>
+
+<nav>
+
+    <a href="../index.html">
+        ← Home
+    </a>
+
+</nav>
+
+<div class="container">
+
+    <h1>Exam Notifications</h1>
+
+    <p class="subtitle">
+        AI-generated exam schedule based on
+        your university and degree selection.
+    </p>
+
+    <div class="semester-box">
+
+        <label>Select Semester</label>
+
+        <select id="semesterSelect">
+
+            <option value="1">
+                Semester 1
+            </option>
+
+            <option value="2">
+                Semester 2
+            </option>
+
+            <option value="3">
+                Semester 3
+            </option>
+
+            <option value="4">
+                Semester 4
+            </option>
+
+            <option value="5">
+                Semester 5
+            </option>
+
+            <option value="6">
+                Semester 6
+            </option>
+
+        </select>
+
+    </div>
+
+    <div id="examGrid"
+         class="exam-grid">
+
+    </div>
+
+</div>
+
+<script>
+
+const degree =
+    localStorage.getItem("degree");
+
+const exams = {
+
+    informatics: {
+
+        1: [
+
+            {
+                subject: "Programming 1", //TEST
+                date: "2026-05-30"
+            },
+
+            {
+                subject: "Mathematics", //Test
+                date: "2026-05-29"
+            },
+
+            {
+                subject: "Business Management",
+                date: "2026-01-25"
+            }
+
+        ],
+
+        2: [
+
+            {
+                subject: "Databases",
+                date: "2026-07-02"
+            },
+
+            {
+                subject: "Web Development",
+                date: "2026-07-08"
+            },
+
+            {
+                subject: "Statistics",
+                date: "2026-07-15"
+            }
+
+        ],
+
+        3: [
+
+            {
+                subject: "Software Engineering",
+                date: "2026-01-10"
+            },
+
+            {
+                subject: "Networks",
+                date: "2026-01-17"
+            },
+
+            {
+                subject: "Accounting",
+                date: "2026-01-24"
+            }
+
+        ],
+
+        4: [
+
+            {
+                subject: "Cyber Security",
+                date: "2026-07-05"
+            },
+
+            {
+                subject: "Project Management",
+                date: "2026-07-11"
+            },
+
+            {
+                subject: "AI Basics",
+                date: "2026-07-18"
+            }
+
+        ],
+
+        5: [
+
+            {
+                subject: "Cloud Computing",
+                date: "2026-01-08"
+            },
+
+            {
+                subject: "Machine Learning",
+                date: "2026-01-15"
+            },
+
+            {
+                subject: "IT Consulting",
+                date: "2026-01-22"
+            }
+
+        ],
+
+        6: [
+
+            {
+                subject: "Bachelor Thesis",
+                date: "2026-07-01"
+            },
+
+            {
+                subject: "Business Analytics",
+                date: "2026-07-10"
+            },
+
+            {
+                subject: "ERP Systems",
+                date: "2026-07-18"
+            }
+
+        ]
+
+    },
+
+    chemistry: {
+
+    1: [
+
+        {
+            subject: "Organic Chemistry", //TEST
+            date: "2026-05-30"
+        },
+
+        {
+            subject: "Physics",
+            date: "2026-01-18"
+        },
+
+        {
+            subject: "Laboratory Basics",
+            date: "2026-01-26"
+        }
+
+    ],
+
+    2: [
+
+        {
+            subject: "Biochemistry",
+            date: "2026-07-03"
+        },
+
+        {
+            subject: "Chemical Analysis",
+            date: "2026-07-09"
+        },
+
+        {
+            subject: "Thermodynamics",
+            date: "2026-07-16"
+        }
+
+    ],
+
+    3: [
+
+        {
+            subject: "Inorganic Chemistry",
+            date: "2026-01-10"
+        },
+
+        {
+            subject: "Molecular Biology",
+            date: "2026-01-17"
+        },
+
+        {
+            subject: "Analytical Chemistry",
+            date: "2026-01-24"
+        }
+
+    ],
+
+    4: [
+
+        {
+            subject: "Pharmaceutical Chemistry",
+            date: "2026-07-05"
+        },
+
+        {
+            subject: "Environmental Chemistry",
+            date: "2026-07-11"
+        },
+
+        {
+            subject: "Spectroscopy",
+            date: "2026-07-18"
+        }
+
+    ],
+
+    5: [
+
+        {
+            subject: "Advanced Synthesis",
+            date: "2026-01-08"
+        },
+
+        {
+            subject: "Toxicology",
+            date: "2026-01-15"
+        },
+
+        {
+            subject: "Biotechnology",
+            date: "2026-01-22"
+        }
+
+    ],
+
+    6: [
+
+        {
+            subject: "Bachelor Thesis",
+            date: "2026-07-01"
+        },
+
+        {
+            subject: "Research Methods",
+            date: "2026-07-10"
+        },
+
+        {
+            subject: "Chemical Engineering",
+            date: "2026-07-18"
+        }
+
+    ]
+
+}
+
+};
+
+localStorage.setItem(
+    "examData",
+    JSON.stringify(exams)
+);
+
+// TEST NOTIFICATION
+const testNotification = {
+
+    subject: "Demo AI Reminder",
+    date: "2025-12-01"
+
+};
+
+const semesterSelect =
+    document.getElementById(
+        "semesterSelect"
+    );
+
+const examGrid =
+    document.getElementById(
+        "examGrid"
+    );
+
+function loadExams() {
+
+    examGrid.innerHTML = "";
+
+    const semester =
+        semesterSelect.value;
+
+    const semesterExams =
+        exams[degree][semester] || [];
+
+    semesterExams.forEach(exam => {
+
+        const enabled =
+            localStorage.getItem(
+                "notify_" + exam.subject
+            );
+
+        const card =
+            document.createElement("div");
+
+        card.className =
+            "exam-card";
+
+        card.innerHTML = `
+
+            <h2>${exam.subject}</h2>
+
+            <p>
+                Exam Date:
+                ${exam.date}
+            </p>
+
+            <label class="switch">
+
+                <input type="checkbox"
+                       ${enabled ? "checked" : ""}
+                       onchange="toggleNotification(
+                           '${exam.subject}'
+                       )">
+
+                <span class="slider"></span>
+
+            </label>
+
+        `;
+
+        examGrid.appendChild(card);
+
+    });
+
+}
+
+function toggleNotification(subject) {
+
+    const key =
+        "notify_" + subject;
+
+    if(localStorage.getItem(key)) {
+
+        localStorage.removeItem(key);
+
+    } else {
+
+        localStorage.setItem(
+            key,
+            "true"
+        );
+
+    }
+
+}
+
+semesterSelect.addEventListener(
+    "change",
+    loadExams
+);
+
+loadExams();
+
+</script>
+
+</body>
+</html>
