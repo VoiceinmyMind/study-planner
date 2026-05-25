@@ -97,3 +97,22 @@ select {
     font-weight: bold;
     font-size: 1rem;
 }
+
+#resetAllBtn {
+
+    margin-bottom: 25px;
+
+    padding: 12px 18px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #ef4444;
+
+    color: white;
+
+    cursor: pointer;
+
+    font-size: 1rem;
+}

@@ -24,6 +24,10 @@
 
     <h1>Your Subjects</h1>
 
+    <button id="resetAllBtn">
+    Reset Daily Learning
+</button>
+
     <div class="semester-box">
 
         <label>Select Semester</label>
@@ -76,7 +80,7 @@ const lastReset =
     );
 
 // RESET EVERY NEW DAY
-if(lastReset !== today) {
+if(!lastReset || lastReset !== today)  {
 
     Object.keys(localStorage)
         .forEach(key => {
@@ -202,7 +206,7 @@ function loadSubjects() {
     semesterSubjects.forEach(subject => {
 
         const completed =
-            localStorage.getItem(subject);
+    localStorage.getItem(subject);
 
         const card =
             document.createElement("a");
@@ -239,6 +243,31 @@ semesterSelect.addEventListener(
     "change",
     loadSubjects
 );
+
+const resetBtn =
+    document.getElementById(
+        "resetAllBtn"
+    );
+
+resetBtn.onclick = () => {
+
+    Object.keys(localStorage)
+        .forEach(key => {
+
+        if(
+            localStorage.getItem(key)
+            === "completed"
+        ) {
+
+            localStorage.removeItem(key);
+
+        }
+
+    });
+
+    location.reload();
+
+};
 
 loadSubjects();
 
