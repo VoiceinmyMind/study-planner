@@ -5,7 +5,7 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Study Planner</title>
+    <title>StudySync</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -13,7 +13,7 @@
 
 <nav>
 
-    <h1>Study Planner</h1>
+    <h1>StudySync</h1>
 
     <ul>
         <li><a href="index.html">Home</a></li>
@@ -237,10 +237,14 @@ settingsBtn.onclick = () => {
 saveBtn.onclick = () => {
 
     const university =
-        document.getElementById("university").value;
+        document.getElementById(
+            "university"
+        ).value;
 
     const degree =
-        document.getElementById("degree").value;
+        document.getElementById(
+            "degree"
+        ).value;
 
     localStorage.setItem(
         "university",
@@ -253,6 +257,9 @@ saveBtn.onclick = () => {
     );
 
     modal.style.display = "none";
+
+    // RELOAD PAGE
+    location.reload();
 };
 
 window.onload = () => {
@@ -281,6 +288,14 @@ const examData =
         )
     );
 
+const currentDegree =
+    localStorage.getItem(
+        "degree"
+    );
+
+const degreeData =
+    examData?.[currentDegree];
+
 const today =
     new Date();
 
@@ -291,34 +306,30 @@ Object.keys(localStorage).forEach(key => {
         const subject =
             key.replace("notify_", "");
 
-        let foundDate = null;
+        let foundExam = null;
 
-        // SEARCH ALL EXAMS
-        Object.values(examData || {})
-            .forEach(semesters => {
+        // SEARCH ONLY CURRENT DEGREE
+        Object.values(degreeData || {})
+            .forEach(semester => {
 
-            Object.values(semesters)
-                .forEach(exams => {
+            semester.forEach(exam => {
 
-                exams.forEach(exam => {
+                if(exam.subject === subject) {
 
-                    if(exam.subject === subject) {
+                    foundExam = exam;
 
-                        foundDate =
-                            exam.date;
-
-                    }
-
-                });
+                }
 
             });
 
         });
 
-        if(!foundDate) return;
+        // IGNORE SUBJECTS
+        // FROM OTHER DEGREES
+        if(!foundExam) return;
 
         const examDate =
-            new Date(foundDate);
+            new Date(foundExam.date);
 
         const diffTime =
             examDate - today;
@@ -329,6 +340,7 @@ Object.keys(localStorage).forEach(key => {
                 (1000 * 60 * 60 * 24)
             );
 
+        // ONLY <= 14 DAYS
         if(diffDays <= 14 &&
            diffDays >= 0) {
 
@@ -356,7 +368,8 @@ if(enabledNotifications.length > 0) {
 
     examAlertText.innerHTML = `
 
-        No upcoming exams!
+        No upcoming exams
+        within 2 weeks.
 
     `;
 

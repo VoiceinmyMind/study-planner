@@ -36,10 +36,19 @@ nav a:hover {
 }
 
 .dashboard-grid {
+
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 30px;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(320px, 320px));
+
+    justify-content: center;
+
+    gap: 35px;
+
     padding: 40px 60px 80px;
+
+    width: 100%;
 }
 
 .card {
@@ -50,6 +59,7 @@ nav a:hover {
     text-decoration: none;
     transition: 0.3s;
     cursor: pointer;
+    width: 320px;
 }
 
 .card:hover {
@@ -234,6 +244,8 @@ nav a:hover {
 
     display: flex;
 
+    justify-content: center;
+
     align-items: center;
 
     gap: 120px;
@@ -242,7 +254,7 @@ nav a:hover {
 
     margin-bottom: 20px;
 
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
 }
 
 .hero {
@@ -253,9 +265,13 @@ nav a:hover {
 
     justify-content: center;
 
-    align-items: flex-start;
+    align-items: center;
 
-    margin-top: -10px;
+    text-align: center;
+
+    flex: 1;
+
+    min-width: 300px;
 }
 
 .hero h1 {
@@ -279,7 +295,7 @@ nav a:hover {
 
     text-align: center;
 
-    width: 100%;
+    max-width: 700px;
 }
 
 .notification-item {
