@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyPlanner — Study Smarter</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #020617;
+  --surface:  #0d1628;
+  --card:     #111827;
+  --border:   #1e293b;
+  --accent:   #38bdf8;
+  --accent2:  #818cf8;
+  --green:    #22c55e;
+  --text:     #f1f5f9;
+  --muted:    #64748b;
+  --soft:     #94a3b8;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ── NOISE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0.4;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 20px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid transparent;
+  transition: background 0.3s, border-color 0.3s, backdrop-filter 0.3s;
+}
+
+nav.scrolled {
+  background: rgba(2, 6, 23, 0.85);
+  border-color: var(--border);
+  backdrop-filter: blur(16px);
+}
+
+.nav-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.nav-logo span { color: var(--accent); }
+
+.nav-links {
+  display: flex;
+  gap: 36px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--soft);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); }
+
+.nav-cta {
+  background: var(--accent);
+  color: #020617;
+  padding: 10px 22px;
+  border-radius: 100px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.nav-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 30px rgba(56,189,248,0.35);
+}
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 40px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Gradient orbs */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+}
+
+.orb-1 {
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(56,189,248,0.12) 0%, transparent 70%);
+  top: -100px; left: -150px;
+  animation: drift1 12s ease-in-out infinite alternate;
+}
+
+.orb-2 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(129,140,248,0.1) 0%, transparent 70%);
+  bottom: -50px; right: -100px;
+  animation: drift2 15s ease-in-out infinite alternate;
+}
+
+.orb-3 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(34,197,94,0.08) 0%, transparent 70%);
+  top: 40%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes drift1 {
+  from { transform: translate(0,0) rotate(0deg); }
+  to   { transform: translate(60px, 40px) rotate(20deg); }
+}
+
+@keyframes drift2 {
+  from { transform: translate(0,0); }
+  to   { transform: translate(-40px, -60px); }
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(56,189,248,0.1);
+  border: 1px solid rgba(56,189,248,0.25);
+  color: var(--accent);
+  padding: 7px 16px;
+  border-radius: 100px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  margin-bottom: 36px;
+  animation: fadeUp 0.6s ease both;
+}
+
+.hero-badge::before {
+  content: '';
+  width: 7px; height: 7px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  max-width: 900px;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+
+.hero h1 .line-accent { color: var(--accent); }
+.hero h1 .line-dim { color: var(--muted); }
+
+.hero-sub {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: var(--soft);
+  max-width: 520px;
+  margin-top: 24px;
+  font-weight: 300;
+  line-height: 1.7;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 44px;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #020617;
+  padding: 16px 36px;
+  border-radius: 100px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1rem;
+  font-family: 'Syne', sans-serif;
+  transition: transform 0.2s, box-shadow 0.2s;
+  letter-spacing: -0.01em;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(56,189,248,0.4);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--soft);
+  padding: 16px 36px;
+  border-radius: 100px;
+  text-decoration: none;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+/* App preview */
+.hero-preview {
+  margin-top: 80px;
+  width: 100%;
+  max-width: 960px;
+  animation: fadeUp 0.8s 0.5s ease both;
+  position: relative;
+}
+
+.preview-frame {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(56,189,248,0.05);
+}
+
+.preview-bar {
+  background: var(--surface);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dot-red   { width:10px; height:10px; border-radius:50%; background:#f87171; }
+.dot-yellow{ width:10px; height:10px; border-radius:50%; background:#fbbf24; }
+.dot-green { width:10px; height:10px; border-radius:50%; background:#22c55e; }
+
+.preview-url {
+  flex: 1;
+  background: var(--card);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-left: 10px;
+}
+
+.preview-body {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 24px;
+}
+
+.preview-card {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+}
+
+.preview-card-title {
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+
+.preview-card-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.preview-card-label { font-size: 0.75rem; color: var(--soft); margin-top: 4px; }
+
+.preview-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 60px;
+  margin-top: 10px;
+}
+
+.preview-bar-item {
+  flex: 1;
+  background: var(--accent);
+  border-radius: 4px 4px 0 0;
+  opacity: 0.7;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── SECTION BASE ── */
+section { padding: 120px 60px; max-width: 1200px; margin: auto; }
+
+.section-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 20px;
+}
+
+.section-sub {
+  color: var(--soft);
+  font-size: 1.05rem;
+  max-width: 500px;
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+/* ── FEATURES ── */
+.features-section {
+  padding: 120px 60px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 60px;
+}
+
+.feature-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 36px 32px;
+  transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(56,189,248,0.05) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.feature-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(56,189,248,0.3);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.feature-card:hover::after { opacity: 1; }
+
+.feature-icon {
+  font-size: 2.2rem;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.feature-card h3 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.feature-card p {
+  color: var(--soft);
+  font-size: 0.9rem;
+  line-height: 1.65;
+  font-weight: 300;
+}
+
+.feature-tag {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(56,189,248,0.1);
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+
+.feature-tag.premium {
+  color: var(--accent2);
+  background: rgba(129,140,248,0.1);
+}
+
+/* ── HOW IT WORKS ── */
+.how-section {
+  padding: 120px 60px;
+  background: var(--surface);
+}
+
+.how-inner {
+  max-width: 1200px;
+  margin: auto;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  margin-top: 60px;
+  position: relative;
+}
+
+.steps::before {
+  content: '';
+  position: absolute;
+  top: 32px;
+  left: calc(12.5% + 16px);
+  right: calc(12.5% + 16px);
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2), var(--green), var(--accent));
+  opacity: 0.3;
+}
+
+.step {
+  text-align: center;
+  padding: 0 20px;
+}
+
+.step-num {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--accent);
+  margin: 0 auto 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.step h4 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+.step p {
+  color: var(--soft);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+/* ── STATS ── */
+.stats-strip {
+  background: linear-gradient(135deg, rgba(56,189,248,0.08) 0%, rgba(129,140,248,0.06) 100%);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 60px;
+}
+
+.stats-inner {
+  max-width: 1200px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+  text-align: center;
+}
+
+.stat-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-label {
+  color: var(--soft);
+  font-size: 0.85rem;
+  margin-top: 6px;
+  font-weight: 300;
+}
+
+/* ── PRICING ── */
+.pricing-section {
+  padding: 120px 60px;
+  max-width: 1200px;
+  margin: auto;
+  text-align: center;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-top: 60px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pricing-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 44px 40px;
+  text-align: left;
+  position: relative;
+  transition: transform 0.25s;
+}
+
+.pricing-card:hover { transform: translateY(-4px); }
+
+.pricing-card.featured {
+  border-color: var(--accent);
+  background: linear-gradient(145deg, rgba(56,189,248,0.06) 0%, var(--card) 60%);
+}
+
+.pricing-badge {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #020617;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 16px;
+  border-radius: 100px;
+}
+
+.pricing-plan {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.pricing-price {
+  font-family: 'Syne', sans-serif;
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin-bottom: 6px;
+}
+
+.pricing-price span {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.pricing-desc {
+  color: var(--soft);
+  font-size: 0.88rem;
+  margin-bottom: 32px;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.pricing-features {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 36px;
+}
+
+.pricing-features li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: var(--soft);
+}
+
+.pricing-features li::before {
+  content: '✓';
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: rgba(34,197,94,0.15);
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.pricing-features li.locked { color: var(--muted); }
+.pricing-features li.locked::before {
+  content: '✕';
+  background: rgba(100,116,139,0.1);
+  color: var(--muted);
+}
+
+.btn-plan {
+  display: block;
+  text-align: center;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-family: 'Syne', sans-serif;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.btn-plan-free {
+  background: var(--border);
+  color: var(--soft);
+}
+
+.btn-plan-free:hover { background: #2d3d52; color: var(--text); }
+
+.btn-plan-pro {
+  background: var(--accent);
+  color: #020617;
+}
+
+.btn-plan-pro:hover {
+  box-shadow: 0 8px 30px rgba(56,189,248,0.4);
+  transform: translateY(-1px);
+}
+
+/* ── CTA ── */
+.cta-section {
+  padding: 100px 60px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 800px; height: 400px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse, rgba(56,189,248,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cta-section h2 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 4rem);
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-section p {
+  color: var(--soft);
+  font-size: 1.05rem;
+  margin-bottom: 44px;
+  font-weight: 300;
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.footer-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--soft);
+}
+
+.footer-logo span { color: var(--accent); }
+
+/* ── SCROLL REVEAL ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  nav { padding: 18px 24px; }
+  .nav-links { display: none; }
+  section, .features-section, .pricing-section, .cta-section { padding: 80px 24px; }
+  .features-grid { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr 1fr; gap: 40px; }
+  .steps::before { display: none; }
+  .stats-inner { grid-template-columns: 1fr 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .how-section { padding: 80px 24px; }
+  .stats-strip { padding: 60px 24px; }
+  footer { flex-direction: column; gap: 16px; text-align: center; }
+  .preview-body { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">Study<span>Planner</span></a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <a href="index.html" class="nav-cta">Open App →</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="hero-badge">✦ Built for students at FH Münster</div>
+
+  <h1>
+    Study smarter.<br>
+    <span class="line-accent">Not harder.</span><br>
+    <span class="line-dim">Finally.</span>
+  </h1>
+
+  <p class="hero-sub">
+    The all-in-one study planner that organises your subjects, tracks your progress, and keeps every exam deadline in sight.
+  </p>
+
+  <div class="hero-actions">
+    <a href="index.html" class="btn-primary">Start for free</a>
+    <a href="#features" class="btn-secondary">See features</a>
+  </div>
+
+  <div class="hero-preview">
+    <div class="preview-frame">
+      <div class="preview-bar">
+        <div class="dot-red"></div>
+        <div class="dot-yellow"></div>
+        <div class="dot-green"></div>
+        <div class="preview-url">studyplanner.app/dashboard</div>
+      </div>
+      <div class="preview-body">
+        <div class="preview-card">
+          <div class="preview-card-title">Study Sessions</div>
+          <div class="preview-card-value">24</div>
+          <div class="preview-card-label">Completed this semester</div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-card-title">Flashcards</div>
+          <div class="preview-card-value">312</div>
+          <div class="preview-card-label">Reviewed in total</div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-card-title">Efficiency</div>
+          <div class="preview-card-value" style="color:var(--green)">82%</div>
+          <div class="preview-card-label">Learning score</div>
+          <div class="preview-bar-chart">
+            <div class="preview-bar-item" style="height:40%"></div>
+            <div class="preview-bar-item" style="height:65%"></div>
+            <div class="preview-bar-item" style="height:50%"></div>
+            <div class="preview-bar-item" style="height:80%"></div>
+            <div class="preview-bar-item" style="height:60%"></div>
+            <div class="preview-bar-item" style="height:90%"></div>
+            <div class="preview-bar-item" style="height:75%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stats-inner">
+    <div class="reveal">
+      <div class="stat-num">9</div>
+      <div class="stat-label">Core features</div>
+    </div>
+    <div class="reveal">
+      <div class="stat-num">2</div>
+      <div class="stat-label">Degree programs</div>
+    </div>
+    <div class="reveal">
+      <div class="stat-num">6</div>
+      <div class="stat-label">Semesters tracked</div>
+    </div>
+    <div class="reveal">
+      <div class="stat-num">100%</div>
+      <div class="stat-label">Free to start</div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="features-section" id="features">
+  <div class="section-label">Features</div>
+  <h2 class="section-title reveal">Everything you need.<br>Nothing you don't.</h2>
+  <p class="section-sub reveal">Each tool is designed to fit naturally into a student's workflow — from the first lecture to the final exam.</p>
+
+  <div class="features-grid">
+
+    <div class="feature-card reveal">
+      <span class="feature-icon">📚</span>
+      <h3>Subject Tracker</h3>
+      <p>All your courses in one place. Start a focused 30-minute study session per subject and track your completion throughout the semester.</p>
+      <span class="feature-tag">Free</span>
+    </div>
+
+    <div class="feature-card reveal">
+      <span class="feature-icon">🃏</span>
+      <h3>Flashcards</h3>
+      <p>Active recall is the most effective study method. Create flashcard sets per subject and drill your knowledge until it sticks.</p>
+      <span class="feature-tag">Free</span>
+    </div>
+
+    <div class="feature-card reveal">
+      <span class="feature-icon">📅</span>
+      <h3>Calendar & Todos</h3>
+      <p>A fully functional monthly calendar where you can add colour-coded todos to any day. See what's coming up at a glance on your dashboard.</p>
+      <span class="feature-tag">Free</span>
+    </div>
+
+    <div class="feature-card reveal">
+      <span class="feature-icon">⏱️</span>
+      <h3>Focus Study Mode</h3>
+      <p>Enter distraction-free fullscreen mode with a custom timer up to 3 hours. Get a small reward when you complete your session.</p>
+      <span class="feature-tag">Free</span>
+    </div>
+
+    <div class="feature-card reveal">
+      <span class="feature-icon">📊</span>
+      <h3>Statistics</h3>
+      <p>Track completed sessions, flashcards reviewed, and per-subject progress bars. Know exactly where you stand at all times.</p>
+      <span class="feature-tag">Free</span>
+    </div>
+
+    <div class="feature-card reveal">
+      <span class="feature-icon">🔔</span>
+      <h3>Exam Notifications</h3>
+      <p>Never miss an exam. Toggle smart notifications per subject and get alerted when deadlines are within 14 days.</p>
+      <span class="feature-tag">Free</span>
+    </div>
+
+    <div class="feature-card reveal">
+      <span class="feature-icon">💬</span>
+      <h3>Study Assistant</h3>
+      <p>An intelligent chatbot that answers questions about study techniques, app features, and keeps you motivated when things get tough.</p>
+      <span class="feature-tag">Free</span>
+    </div>
+
+    <div class="feature-card reveal">
+      <span class="feature-icon">👥</span>
+      <h3>Study Groups</h3>
+      <p>Collaborate with classmates, share notes and study together in real time. Built for team learning.</p>
+      <span class="feature-tag premium">Premium</span>
+    </div>
+
+    <div class="feature-card reveal">
+      <span class="feature-icon">📁</span>
+      <h3>File Uploads</h3>
+      <p>Upload your lecture PDFs and slides and have the app automatically generate summaries and flashcards for you.</p>
+      <span class="feature-tag premium">Premium</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-section" id="how">
+  <div class="how-inner">
+    <div class="section-label">How it works</div>
+    <h2 class="section-title reveal">Up and running<br>in four steps.</h2>
+
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">1</div>
+        <h4>Pick your degree</h4>
+        <p>Select your university, degree and semester. Your subjects are loaded automatically.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">2</div>
+        <h4>Plan your week</h4>
+        <p>Add todos to the calendar, enable exam notifications, and see everything on the dashboard.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">3</div>
+        <h4>Study with focus</h4>
+        <p>Use the 30-min subject timer or enter custom Focus Mode to power through your material.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">4</div>
+        <h4>Track your growth</h4>
+        <p>Review your statistics, drill flashcards, and watch your progress bars climb to 100%.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div class="pricing-section" id="pricing">
+  <div class="section-label">Pricing</div>
+  <h2 class="section-title reveal">Simple pricing.<br>No surprises.</h2>
+  <p class="section-sub reveal" style="margin:0 auto 0;">Start for free and upgrade when you need more.</p>
+
+  <div class="pricing-grid">
+
+    <div class="pricing-card reveal">
+      <div class="pricing-plan">Free</div>
+      <div class="pricing-price">€0 <span>/ forever</span></div>
+      <p class="pricing-desc">Everything you need to stay on top of your studies, completely free.</p>
+      <ul class="pricing-features">
+        <li>Subject & semester tracking</li>
+        <li>Flashcard system</li>
+        <li>Calendar & todos</li>
+        <li>Focus timer & study mode</li>
+        <li>Statistics & progress</li>
+        <li>Exam notifications</li>
+        <li>Study assistant chatbot</li>
+        <li class="locked">Study Groups</li>
+        <li class="locked">File Uploads & AI summaries</li>
+      </ul>
+      <a href="index.html" class="btn-plan btn-plan-free">Get started free</a>
+    </div>
+
+    <div class="pricing-card featured reveal">
+      <div class="pricing-badge">Coming Soon</div>
+      <div class="pricing-plan">Premium</div>
+      <div class="pricing-price">€4.99 <span>/ month</span></div>
+      <p class="pricing-desc">For students who want the full experience — collaboration and AI-powered tools.</p>
+      <ul class="pricing-features">
+        <li>Everything in Free</li>
+        <li>Study Groups & collaboration</li>
+        <li>File & PDF uploads</li>
+        <li>AI-generated flashcards</li>
+        <li>AI lecture summaries</li>
+        <li>Priority support</li>
+      </ul>
+      <a href="#" class="btn-plan btn-plan-pro">Join the waitlist</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2 class="reveal">Ready to study<br><span style="color:var(--accent)">smarter?</span></h2>
+  <p class="reveal">Join students at FH Münster who are already using StudyPlanner to ace their exams.</p>
+  <a href="index.html" class="btn-primary reveal">Open StudyPlanner — it's free</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Study<span>Planner</span></div>
+  <div>Built for students. © 2026</div>
+  <div>FH Münster · Business Informatics · Chemistry</div>
+</footer>
+
+<script>
+// Nav scroll effect
+const navbar = document.getElementById("navbar");
+window.addEventListener("scroll", () => {
+  navbar.classList.toggle("scrolled", window.scrollY > 40);
+});
+
+// Scroll reveal
+const revealEls = document.querySelectorAll(".reveal");
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => {
+        entry.target.classList.add("visible");
+      }, 80);
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
+
+revealEls.forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

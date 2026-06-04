@@ -2,121 +2,200 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Chatbot</title>
-
-    <link rel="stylesheet"
-          href="chatbot.css">
+    <link rel="stylesheet" href="chatbot.css">
+    <style>
+        .typing-indicator {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            padding: 15px 20px;
+        }
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #38bdf8;
+            border-radius: 50%;
+            animation: bounce 1.2s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .suggestion-btn {
+            padding: 10px 16px;
+            border: 1px solid #38bdf8;
+            border-radius: 20px;
+            background: transparent;
+            color: #38bdf8;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+        .suggestion-btn:hover {
+            background: #38bdf8;
+            color: white;
+        }
+    </style>
 </head>
 <body>
 
 <nav>
-
-    <a href="../index.html">
-        ← Home
-    </a>
-
+    <a href="../index.html">← Home</a>
 </nav>
 
 <div class="chat-container">
 
-    <h1>AI Study Assistant</h1>
+    <h1>Study Assistant</h1>
+    <p class="subtitle">Ask me anything about studying, the app or learning tips.</p>
 
-    <p class="subtitle">
-        Ask questions about your studies,
-        subjects or learning progress.
-    </p>
-
-    <div class="chat-box"
-         id="chatBox">
-
+    <div class="chat-box" id="chatBox">
         <div class="bot-message">
-
-            Hello! 👋 <br><br>
-
-            I will soon become your personal
-            AI study assistant.
-
+            Hello! 👋 I'm your study assistant.<br><br>
+            I can help you with learning tips, explain how this app works, or give you study motivation. What do you need?
+            <div class="suggestions">
+                <button class="suggestion-btn" onclick="ask('How should I study?')">How should I study?</button>
+                <button class="suggestion-btn" onclick="ask('What is Pomodoro?')">What is Pomodoro?</button>
+                <button class="suggestion-btn" onclick="ask('How do flashcards work?')">How do flashcards work?</button>
+                <button class="suggestion-btn" onclick="ask('Motivate me!')">Motivate me!</button>
+            </div>
         </div>
-
     </div>
 
     <div class="input-area">
-
-        <input type="text"
-               id="userInput"
-               placeholder="Ask something...">
-
-        <button onclick="sendMessage()">
-            Send
-        </button>
-
+        <input type="text" id="userInput" placeholder="Ask something..." onkeydown="if(event.key==='Enter') sendMessage()">
+        <button onclick="sendMessage()">Send</button>
     </div>
 
 </div>
 
 <script>
 
-const chatBox =
-    document.getElementById("chatBox");
+const chatBox = document.getElementById("chatBox");
+
+const rules = [
+    {
+        keywords: ["pomodoro", "technique", "25 min", "break"],
+        response: "🍅 The Pomodoro Technique works like this:<br><br>1. Study for <strong>25 minutes</strong> without interruptions<br>2. Take a <strong>5 minute break</strong><br>3. After 4 rounds, take a <strong>longer break (15-30 min)</strong><br><br>You can use the <strong>Focus Study Mode</strong> in this app to set your timer!"
+    },
+    {
+        keywords: ["how", "study", "learn", "learning", "tips", "advice"],
+        response: "📚 Here are proven study tips:<br><br>• <strong>Active recall</strong> – test yourself instead of just reading<br>• <strong>Spaced repetition</strong> – review material at increasing intervals<br>• <strong>Pomodoro</strong> – 25 min focus, 5 min break<br>• <strong>No distractions</strong> – phone away while studying<br><br>This app has <strong>Flashcards</strong> and a <strong>Focus Timer</strong> to help you with all of this!"
+    },
+    {
+        keywords: ["flashcard", "flashcards", "cards", "review"],
+        response: "🃏 Flashcards are one of the most effective study methods!<br><br>They use <strong>active recall</strong> – instead of passively reading, you force your brain to retrieve information. This strengthens memory much more effectively.<br><br>👉 Go to the <strong>Flashcards</strong> section in this app to start reviewing your subjects."
+    },
+    {
+        keywords: ["timer", "focus", "session", "focus mode", "study time"],
+        response: "⏱️ The <strong>Focus Study Mode</strong> in this app lets you set a custom timer (up to 3 hours).<br><br>During the session, a fullscreen overlay keeps you focused. When you're done, you get a little reward 🐱<br><br>Go to <strong>Study Time</strong> in the menu to start a session!"
+    },
+    {
+        keywords: ["subject", "subjects", "semester", "course", "degree"],
+        response: "📖 In the <strong>Subjects</strong> section you can see all your courses per semester.<br><br>Each subject has a 30-minute study session timer. Once completed, it gets marked with a ✔ so you can track your progress."
+    },
+    {
+        keywords: ["stat", "stats", "statistics", "progress", "analytics"],
+        response: "📊 The <strong>Statistics</strong> page shows:<br><br>• Total completed study sessions<br>• Flashcards reviewed<br>• Per-subject progress bar<br><br>Keep studying to push your progress to 100%! 💪"
+    },
+    {
+        keywords: ["notification", "notifications", "exam", "exams", "deadline", "date"],
+        response: "🔔 The <strong>Notifications</strong> page shows all your upcoming exams per semester.<br><br>You can toggle notifications on/off for each exam individually."
+    },
+    {
+        keywords: ["calendar"],
+        response: "📅 The <strong>Calendar</strong> page is coming soon! It will show your exams, deadlines and study sessions in a full calendar view."
+    },
+    {
+        keywords: ["motivat", "motivation", "tired", "give up", "hard", "difficult", "struggling"],
+        response: "💪 You've got this!<br><br>Every expert was once a beginner. Even <strong>20 minutes of focused study</strong> per day adds up to over 120 hours per semester.<br><br>Start one session right now – future you will be grateful. 🚀"
+    },
+    {
+        keywords: ["hello", "hi", "hey", "hallo"],
+        response: "Hey! 👋 Great to see you here. Ready to study?<br><br>Ask me about learning tips, app features or just get some motivation!"
+    },
+    {
+        keywords: ["thank", "thanks", "danke"],
+        response: "You're welcome! 😊 Good luck with your studies – you've got this! 📚"
+    },
+    {
+        keywords: ["group", "groups", "study group"],
+        response: "👥 <strong>Study Groups</strong> is a Premium feature – coming soon! You'll be able to collaborate with classmates and study together."
+    },
+    {
+        keywords: ["upload", "file", "document", "pdf", "notes"],
+        response: "📁 <strong>File Upload</strong> is a Premium feature – coming soon! You'll be able to upload lecture notes and get auto-generated flashcards."
+    },
+    {
+        keywords: ["app", "feature", "what can", "help"],
+        response: "🎓 This app includes:<br><br>• <strong>Subjects</strong> – study sessions per course<br>• <strong>Flashcards</strong> – active recall practice<br>• <strong>Study Time</strong> – focus timer<br>• <strong>Stats</strong> – track your progress<br>• <strong>Notifications</strong> – exam dates<br>• <strong>Calendar</strong> – coming soon<br><br>What would you like to know more about?"
+    }
+];
+
+const fallbacks = [
+    "Hmm, I'm not sure about that. Try asking about <strong>study tips</strong>, <strong>flashcards</strong>, <strong>the timer</strong> or <strong>app features</strong>!",
+    "I didn't quite get that. 🤔 I'm best at answering questions about studying or how this app works!",
+    "That's outside my knowledge! Ask me about <strong>learning techniques</strong> or how to use this app. 📚"
+];
+let fallbackIndex = 0;
+
+function getBotResponse(message) {
+    const lower = message.toLowerCase();
+    for (const rule of rules) {
+        if (rule.keywords.some(k => lower.includes(k))) {
+            return rule.response;
+        }
+    }
+    return fallbacks[fallbackIndex++ % fallbacks.length];
+}
+
+function appendMessage(html, role) {
+    const div = document.createElement("div");
+    div.className = role === "user" ? "user-message" : "bot-message";
+    div.innerHTML = html;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function showTyping() {
+    const div = document.createElement("div");
+    div.className = "bot-message";
+    div.id = "typingIndicator";
+    div.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function removeTyping() {
+    const el = document.getElementById("typingIndicator");
+    if (el) el.remove();
+}
+
+function ask(text) {
+    document.getElementById("userInput").value = text;
+    sendMessage();
+}
 
 function sendMessage() {
-
-    const input =
-        document.getElementById(
-            "userInput"
-        );
-
-    const message =
-        input.value.trim();
-
-    if(!message) return;
-
-    // USER MESSAGE
-    const userMessage =
-        document.createElement("div");
-
-    userMessage.className =
-        "user-message";
-
-    userMessage.innerText =
-        message;
-
-    chatBox.appendChild(userMessage);
-
-    // BOT RESPONSE
-    setTimeout(() => {
-
-        const botMessage =
-            document.createElement("div");
-
-        botMessage.className =
-            "bot-message";
-
-        botMessage.innerHTML = `
-
-            I am not fully implemented yet,
-            but once a suitable AI provider
-            has been integrated, I will be
-            able to answer all your study
-            questions! 🚀
-
-        `;
-
-        chatBox.appendChild(botMessage);
-
-        chatBox.scrollTop =
-            chatBox.scrollHeight;
-
-    }, 600);
-
+    const input = document.getElementById("userInput");
+    const message = input.value.trim();
+    if (!message) return;
+    appendMessage(message, "user");
     input.value = "";
-
-    chatBox.scrollTop =
-        chatBox.scrollHeight;
+    showTyping();
+    setTimeout(() => {
+        removeTyping();
+        appendMessage(getBotResponse(message), "bot");
+    }, 600);
 }
 
 </script>

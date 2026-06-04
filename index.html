@@ -43,6 +43,22 @@
 
     </div>
 
+    <!-- TODAY'S TODOS WIDGET -->
+    <div class="todo-widget" id="todoWidget">
+        <div class="todo-widget-header">
+            <span>📝 Today's Todos</span>
+            <a href="pages/calendar.html" class="todo-widget-link">Open Calendar →</a>
+        </div>
+        <div class="todo-widget-date" id="todoWidgetDate"></div>
+        <div class="todo-widget-list" id="todoWidgetList">
+            <div class="tw-empty">Loading...</div>
+        </div>
+        <div class="todo-widget-add">
+            <input type="text" id="todoWidgetInput" placeholder="Quick add todo..." onkeydown="if(event.key==='Enter') quickAddTodo()">
+            <button onclick="quickAddTodo()">+</button>
+        </div>
+    </div>
+
     <section class="hero">
 
         <h1>
@@ -376,6 +392,138 @@ if(enabledNotifications.length > 0) {
 }
 
 </script>
+
+<!-- IFRAME BRIDGE: lädt calendar.html unsichtbar um dessen localStorage zu nutzen -->
+<iframe id="calBridge" src="pages/calendar.html"
+    style="display:none;width:0;height:0;border:none;" aria-hidden="true"></iframe>
+
+<script>
+(function() {
+    const now = new Date();
+    document.getElementById("todoWidgetDate").textContent =
+        now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+
+    const bridge = document.getElementById("calBridge");
+    let bridgeReady = false;
+    let pendingAction = null;
+
+    // Warte bis iframe geladen ist
+    bridge.addEventListener("load", function() {
+        bridgeReady = true;
+        // Todos abrufen
+        bridge.contentWindow.postMessage({ type: "GET_TODOS" }, "*");
+        if (pendingAction) {
+            bridge.contentWindow.postMessage(pendingAction, "*");
+            pendingAction = null;
+        }
+    });
+
+    // Antworten vom iframe empfangen
+    window.addEventListener("message", function(e) {
+        if (e.data && e.data.type === "TODOS_DATA") {
+            renderTodos(e.data.todos);
+        }
+    });
+
+    function sendToBridge(msg) {
+        if (bridgeReady) {
+            bridge.contentWindow.postMessage(msg, "*");
+        } else {
+            pendingAction = msg;
+        }
+    }
+
+    function renderTodos(todos) {
+        const list = document.getElementById("todoWidgetList");
+        list.innerHTML = "";
+
+        if (!todos || !todos.length) {
+            list.innerHTML = '<div class="tw-empty">No todos for today 🎉</div>';
+            return;
+        }
+
+        todos.forEach(function(todo, i) {
+            const item = document.createElement("div");
+            item.className = "tw-item";
+
+            const bar = document.createElement("div");
+            bar.className = "tw-color";
+            bar.style.background = todo.color || "#38bdf8";
+
+            const check = document.createElement("div");
+            check.className = "tw-check" + (todo.done ? " checked" : "");
+            if (todo.done) check.textContent = "✓";
+            check.onclick = function() {
+                sendToBridge({ type: "TOGGLE_TODO", index: i });
+            };
+
+            const text = document.createElement("div");
+            text.className = "tw-text" + (todo.done ? " done" : "");
+            text.textContent = todo.text;
+
+            const del = document.createElement("button");
+            del.className = "tw-del";
+            del.textContent = "✕";
+            del.onclick = function() {
+                sendToBridge({ type: "DELETE_TODO", index: i });
+            };
+
+            item.append(bar, check, text, del);
+            list.appendChild(item);
+        });
+    }
+
+    window.quickAddTodo = function() {
+        const input = document.getElementById("todoWidgetInput");
+        const text = input.value.trim();
+        if (!text) return;
+        sendToBridge({ type: "SAVE_TODO", text: text });
+        input.value = "";
+    };
+})();
+</script>
+
+<!-- TODO WIDGET STYLES -->
+<style>
+.todo-widget {
+    background: #111827;
+    border: 1px solid #1e293b;
+    border-radius: 20px;
+    padding: 22px 25px;
+    min-width: 280px;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-left: auto;
+    margin-right: 0;
+}
+.todo-widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1rem;
+}
+.todo-widget-link { font-size: 0.78rem; color: #38bdf8; text-decoration: none; font-weight: normal; }
+.todo-widget-link:hover { text-decoration: underline; }
+.todo-widget-date { font-size: 0.78rem; color: #64748b; margin-top: -6px; }
+.todo-widget-list { display: flex; flex-direction: column; gap: 7px; max-height: 180px; overflow-y: auto; }
+.tw-item { display: flex; align-items: center; gap: 10px; background: #1e293b; padding: 9px 12px; border-radius: 10px; font-size: 0.85rem; }
+.tw-color { width: 4px; height: 28px; border-radius: 4px; flex-shrink: 0; }
+.tw-check { width: 18px; height: 18px; border-radius: 5px; border: 2px solid #475569; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; transition: all 0.15s; }
+.tw-check.checked { background: #22c55e; border-color: #22c55e; color: white; }
+.tw-text { flex: 1; color: #e2e8f0; }
+.tw-text.done { text-decoration: line-through; color: #475569; }
+.tw-del { background: none; border: none; color: #475569; cursor: pointer; font-size: 0.85rem; }
+.tw-del:hover { color: #f87171; }
+.tw-empty { color: #475569; font-size: 0.82rem; text-align: center; padding: 10px 0; }
+.todo-widget-add { display: flex; gap: 8px; margin-top: 2px; }
+.todo-widget-add input { flex: 1; padding: 9px 13px; border-radius: 10px; border: none; background: #1e293b; color: white; font-size: 0.82rem; }
+.todo-widget-add input::placeholder { color: #475569; }
+.todo-widget-add button { padding: 9px 14px; border: none; border-radius: 10px; background: #38bdf8; color: white; cursor: pointer; font-size: 1rem; font-weight: bold; }
+.todo-widget-add button:hover { background: #29aadd; }
+</style>
 
 </body>
 </html>

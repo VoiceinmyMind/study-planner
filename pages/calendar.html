@@ -2,70 +2,698 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendar</title>
+    <link rel="stylesheet" href="calendar.css">
+    <style>
+        * { box-sizing: border-box; }
 
-    <link rel="stylesheet"
-          href="calendar.css">
+        body { padding: 30px; }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 30px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        /* ── CALENDAR ── */
+        .cal-card {
+            background: #111827;
+            border-radius: 25px;
+            padding: 35px;
+            border: 1px solid #1e293b;
+        }
+
+        .cal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .cal-header h2 {
+            font-size: 1.6rem;
+            margin: 0;
+        }
+
+        .nav-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: #1e293b;
+            border: none;
+            color: white;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        .nav-btn:hover { background: #38bdf8; }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .weekday {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #38bdf8;
+            font-weight: bold;
+            padding: 8px 0;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .day-cell {
+            aspect-ratio: 1;
+            background: #1e293b;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 8px 4px 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            position: relative;
+            min-height: 60px;
+        }
+
+        .day-cell:hover { background: #253347; border-color: #38bdf8; }
+
+        .day-cell.empty {
+            background: transparent;
+            cursor: default;
+            border-color: transparent;
+        }
+
+        .day-cell.today {
+            background: #38bdf8;
+            color: #020617;
+            font-weight: bold;
+        }
+
+        .day-cell.today:hover { background: #29aadd; }
+
+        .day-cell.selected {
+            border-color: #38bdf8;
+            background: #1a2f45;
+        }
+
+        .day-cell.today.selected {
+            background: #38bdf8;
+        }
+
+        .day-num {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .dot-row {
+            display: flex;
+            gap: 3px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .todo-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .todo-card {
+            background: #111827;
+            border-radius: 25px;
+            padding: 30px;
+            border: 1px solid #1e293b;
+            flex: 1;
+        }
+
+        .todo-card h3 {
+            margin: 0 0 6px 0;
+            font-size: 1.2rem;
+        }
+
+        .selected-date-label {
+            color: #38bdf8;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+
+        .todo-input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .todo-input-row input {
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: none;
+            background: #1e293b;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .todo-input-row input::placeholder { color: #64748b; }
+
+        .color-picker {
+            display: flex;
+            gap: 7px;
+            margin-bottom: 16px;
+        }
+
+        .color-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.15s;
+        }
+
+        .color-dot:hover { transform: scale(1.2); }
+        .color-dot.active { border-color: white; transform: scale(1.15); }
+
+        .add-btn {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 12px;
+            background: #38bdf8;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+
+        .add-btn:hover { background: #29aadd; }
+
+        .todo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 340px;
+            overflow-y: auto;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #1e293b;
+            padding: 12px 15px;
+            border-radius: 12px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .todo-color-bar {
+            width: 4px;
+            height: 36px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .todo-text {
+            flex: 1;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+            word-break: break-word;
+        }
+
+        .todo-text.done {
+            text-decoration: line-through;
+            color: #64748b;
+        }
+
+        .todo-check {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 2px solid #475569;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .todo-check.checked {
+            background: #22c55e;
+            border-color: #22c55e;
+        }
+
+        .todo-check.checked::after { content: "✓"; font-size: 12px; color: white; }
+
+        .del-btn {
+            background: none;
+            border: none;
+            color: #475569;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0 4px;
+            transition: color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .del-btn:hover { color: #f87171; }
+
+        .empty-state {
+            color: #475569;
+            text-align: center;
+            padding: 30px 0;
+            font-size: 0.9rem;
+        }
+
+        /* upcoming */
+        .upcoming-card {
+            background: #111827;
+            border-radius: 25px;
+            padding: 25px 30px;
+            border: 1px solid #1e293b;
+        }
+
+        .upcoming-card h3 { margin: 0 0 16px 0; font-size: 1.1rem; }
+
+        .upcoming-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #1e293b;
+            font-size: 0.85rem;
+        }
+
+        .upcoming-item:last-child { border-bottom: none; }
+
+        .upcoming-date {
+            color: #38bdf8;
+            font-size: 0.78rem;
+            min-width: 60px;
+        }
+
+        .upcoming-text { color: #cbd5e1; flex: 1; }
+    </style>
 </head>
 <body>
 
 <nav>
-
-    <a href="../index.html">
-        ← Home
-    </a>
-
+    <a href="../index.html">← Home</a>
 </nav>
 
-<div class="container">
+<div class="layout">
 
-    <div class="calendar-placeholder">
+    <!-- LEFT: Calendar -->
+    <div class="cal-card">
+        <div class="cal-header">
+            <h2 id="monthLabel">May 2026</h2>
+            <div class="nav-btns">
+                <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+                <button class="nav-btn" onclick="goToday()">Today</button>
+                <button class="nav-btn" onclick="changeMonth(1)">›</button>
+            </div>
+        </div>
 
-        <h1>
-            📅 Calendar
-        </h1>
+        <div class="weekdays">
+            <div class="weekday">Mon</div>
+            <div class="weekday">Tue</div>
+            <div class="weekday">Wed</div>
+            <div class="weekday">Thu</div>
+            <div class="weekday">Fri</div>
+            <div class="weekday">Sat</div>
+            <div class="weekday">Sun</div>
+        </div>
 
-        <p>
-            A smart AI calendar with exams,
-            deadlines and study sessions
-            will be implemented here.
-        </p>
+        <div class="days-grid" id="daysGrid"></div>
+    </div>
 
-        <div class="fake-calendar">
+    <!-- RIGHT: Sidebar -->
+    <div class="sidebar">
 
-            <div class="day">Mon</div>
-            <div class="day">Tue</div>
-            <div class="day">Wed</div>
-            <div class="day">Thu</div>
-            <div class="day">Fri</div>
-            <div class="day">Sat</div>
-            <div class="day">Sun</div>
+        <!-- Todo Panel -->
+        <div class="todo-card">
+            <h3>📝 Todos</h3>
+            <div class="selected-date-label" id="selectedDateLabel">Select a day</div>
 
-            <div>1</div>
-            <div>2</div>
-            <div class="active">3</div>
-            <div>4</div>
-            <div>5</div>
-            <div>6</div>
-            <div>7</div>
+            <div class="color-picker" id="colorPicker"></div>
 
-            <div>8</div>
-            <div>9</div>
-            <div>10</div>
-            <div>11</div>
-            <div class="active">12</div>
-            <div>13</div>
-            <div>14</div>
+            <div class="todo-input-row">
+                <input type="text" id="todoInput" placeholder="Add a todo..." onkeydown="if(event.key==='Enter') addTodo()">
+                <button class="add-btn" onclick="addTodo()">Add</button>
+            </div>
 
+            <div class="todo-list" id="todoList">
+                <div class="empty-state">Select a day to see todos</div>
+            </div>
+        </div>
+
+        <!-- Upcoming -->
+        <div class="upcoming-card">
+            <h3>🔜 Upcoming</h3>
+            <div id="upcomingList"></div>
         </div>
 
     </div>
-
 </div>
+
+<script>
+
+// ── State ──────────────────────────────────────────────
+const COLORS = [
+    { hex: "#38bdf8", name: "blue" },
+    { hex: "#22c55e", name: "green" },
+    { hex: "#f59e0b", name: "yellow" },
+    { hex: "#f87171", name: "red" },
+    { hex: "#a78bfa", name: "purple" },
+    { hex: "#fb923c", name: "orange" },
+];
+
+let currentColor = COLORS[0].hex;
+let viewYear, viewMonth;   // displayed month
+let selectedDateKey = null; // "YYYY-MM-DD"
+
+const today = new Date();
+viewYear  = today.getFullYear();
+viewMonth = today.getMonth(); // 0-indexed
+
+// ── LocalStorage helpers ───────────────────────────────
+function loadTodos(dateKey) {
+    return JSON.parse(localStorage.getItem("cal_todos_" + dateKey) || "[]");
+}
+
+function saveTodos(dateKey, todos) {
+    localStorage.setItem("cal_todos_" + dateKey, JSON.stringify(todos));
+}
+
+function dateKey(y, m, d) {
+    return `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+}
+
+// ── Color picker ───────────────────────────────────────
+function buildColorPicker() {
+    const el = document.getElementById("colorPicker");
+    el.innerHTML = "";
+    COLORS.forEach(c => {
+        const dot = document.createElement("div");
+        dot.className = "color-dot" + (c.hex === currentColor ? " active" : "");
+        dot.style.background = c.hex;
+        dot.title = c.name;
+        dot.onclick = () => {
+            currentColor = c.hex;
+            buildColorPicker();
+        };
+        el.appendChild(dot);
+    });
+}
+
+// ── Calendar rendering ─────────────────────────────────
+function renderCalendar() {
+    const grid = document.getElementById("daysGrid");
+    grid.innerHTML = "";
+
+    const months = ["January","February","March","April","May","June",
+                    "July","August","September","October","November","December"];
+    document.getElementById("monthLabel").textContent =
+        `${months[viewMonth]} ${viewYear}`;
+
+    // First weekday (Mon=0)
+    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+    const offset   = (firstDay + 6) % 7; // convert Sun=0 to Mon=0
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+    // Empty cells
+    for (let i = 0; i < offset; i++) {
+        const empty = document.createElement("div");
+        empty.className = "day-cell empty";
+        grid.appendChild(empty);
+    }
+
+    // Day cells
+    for (let d = 1; d <= daysInMonth; d++) {
+        const key  = dateKey(viewYear, viewMonth, d);
+        const todos = loadTodos(key);
+        const isToday = (
+            d === today.getDate() &&
+            viewMonth === today.getMonth() &&
+            viewYear  === today.getFullYear()
+        );
+
+        const cell = document.createElement("div");
+        cell.className = "day-cell" +
+            (isToday ? " today" : "") +
+            (key === selectedDateKey ? " selected" : "");
+
+        // Day number
+        const num = document.createElement("div");
+        num.className = "day-num";
+        num.textContent = d;
+        cell.appendChild(num);
+
+        // Colored dots for todos
+        if (todos.length) {
+            const dotRow = document.createElement("div");
+            dotRow.className = "dot-row";
+            todos.slice(0, 5).forEach(t => {
+                const dot = document.createElement("div");
+                dot.className = "todo-dot";
+                dot.style.background = t.color || "#38bdf8";
+                dotRow.appendChild(dot);
+            });
+            cell.appendChild(dotRow);
+        }
+
+        cell.onclick = () => selectDay(key);
+        grid.appendChild(cell);
+    }
+}
+
+// ── Select day ─────────────────────────────────────────
+function selectDay(key) {
+    selectedDateKey = key;
+    renderCalendar();
+
+    const [y, m, d] = key.split("-").map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    const label = dateObj.toLocaleDateString("en-GB", {
+        weekday: "long", day: "numeric", month: "long", year: "numeric"
+    });
+    document.getElementById("selectedDateLabel").textContent = label;
+    renderTodoList();
+}
+
+// ── Todo list ──────────────────────────────────────────
+function renderTodoList() {
+    const list = document.getElementById("todoList");
+    list.innerHTML = "";
+
+    if (!selectedDateKey) {
+        list.innerHTML = '<div class="empty-state">Select a day to see todos</div>';
+        return;
+    }
+
+    const todos = loadTodos(selectedDateKey);
+    if (!todos.length) {
+        list.innerHTML = '<div class="empty-state">No todos for this day 🎉</div>';
+        renderUpcoming();
+        return;
+    }
+
+    todos.forEach((todo, i) => {
+        const item = document.createElement("div");
+        item.className = "todo-item";
+
+        const bar = document.createElement("div");
+        bar.className = "todo-color-bar";
+        bar.style.background = todo.color || "#38bdf8";
+
+        const check = document.createElement("div");
+        check.className = "todo-check" + (todo.done ? " checked" : "");
+        check.onclick = () => toggleTodo(i);
+
+        const text = document.createElement("div");
+        text.className = "todo-text" + (todo.done ? " done" : "");
+        text.textContent = todo.text;
+
+        const del = document.createElement("button");
+        del.className = "del-btn";
+        del.textContent = "✕";
+        del.onclick = () => deleteTodo(i);
+
+        item.append(bar, check, text, del);
+        list.appendChild(item);
+    });
+
+    renderUpcoming();
+}
+
+function addTodo() {
+    if (!selectedDateKey) {
+        alert("Please select a day first.");
+        return;
+    }
+    const input = document.getElementById("todoInput");
+    const text  = input.value.trim();
+    if (!text) return;
+
+    const todos = loadTodos(selectedDateKey);
+    todos.push({ text, color: currentColor, done: false });
+    saveTodos(selectedDateKey, todos);
+    input.value = "";
+    renderTodoList();
+    renderCalendar();
+}
+
+function toggleTodo(index) {
+    const todos = loadTodos(selectedDateKey);
+    todos[index].done = !todos[index].done;
+    saveTodos(selectedDateKey, todos);
+    renderTodoList();
+}
+
+function deleteTodo(index) {
+    const todos = loadTodos(selectedDateKey);
+    todos.splice(index, 1);
+    saveTodos(selectedDateKey, todos);
+    renderTodoList();
+    renderCalendar();
+}
+
+// ── Upcoming todos ─────────────────────────────────────
+function renderUpcoming() {
+    const el = document.getElementById("upcomingList");
+    el.innerHTML = "";
+
+    const upcoming = [];
+    const now = new Date();
+    now.setHours(0,0,0,0);
+
+    // Scan next 30 days
+    for (let i = 0; i <= 30; i++) {
+        const d = new Date(now);
+        d.setDate(d.getDate() + i);
+        const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+        const todos = loadTodos(key).filter(t => !t.done);
+        todos.forEach(t => upcoming.push({ date: d, text: t.text, color: t.color }));
+    }
+
+    if (!upcoming.length) {
+        el.innerHTML = '<div class="empty-state" style="padding:10px 0">No upcoming todos</div>';
+        return;
+    }
+
+    upcoming.slice(0, 6).forEach(u => {
+        const item = document.createElement("div");
+        item.className = "upcoming-item";
+
+        const dateSpan = document.createElement("div");
+        dateSpan.className = "upcoming-date";
+        const isToday = u.date.toDateString() === new Date().toDateString();
+        dateSpan.textContent = isToday ? "Today" : u.date.toLocaleDateString("en-GB", { day:"numeric", month:"short" });
+
+        const dot = document.createElement("div");
+        dot.className = "todo-dot";
+        dot.style.background = u.color || "#38bdf8";
+        dot.style.flexShrink = "0";
+
+        const text = document.createElement("div");
+        text.className = "upcoming-text";
+        text.textContent = u.text;
+
+        item.append(dateSpan, dot, text);
+        el.appendChild(item);
+    });
+}
+
+// ── Month navigation ───────────────────────────────────
+function changeMonth(dir) {
+    viewMonth += dir;
+    if (viewMonth > 11) { viewMonth = 0;  viewYear++; }
+    if (viewMonth < 0)  { viewMonth = 11; viewYear--; }
+    renderCalendar();
+}
+
+function goToday() {
+    viewYear  = today.getFullYear();
+    viewMonth = today.getMonth();
+    renderCalendar();
+    const key = dateKey(viewYear, viewMonth, today.getDate());
+    selectDay(key);
+}
+
+// ── Init ───────────────────────────────────────────────
+buildColorPicker();
+renderCalendar();
+renderUpcoming();
+
+// Auto-select today
+const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+selectDay(todayKey);
+
+// ── postMessage bridge for index.html ──────────────────
+window.addEventListener("message", function(e) {
+    const now = new Date();
+    const key = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (e.data && e.data.type === "GET_TODOS") {
+        const todos = loadTodos(key);
+        e.source.postMessage({ type: "TODOS_DATA", todos: todos, dateKey: key }, "*");
+    }
+
+    if (e.data && e.data.type === "SAVE_TODO") {
+        const todos = loadTodos(key);
+        todos.push({ text: e.data.text, color: "#38bdf8", done: false });
+        saveTodos(key, todos);
+        e.source.postMessage({ type: "TODOS_DATA", todos: todos, dateKey: key }, "*");
+    }
+
+    if (e.data && e.data.type === "TOGGLE_TODO") {
+        const todos = loadTodos(key);
+        todos[e.data.index].done = !todos[e.data.index].done;
+        saveTodos(key, todos);
+        e.source.postMessage({ type: "TODOS_DATA", todos: todos, dateKey: key }, "*");
+    }
+
+    if (e.data && e.data.type === "DELETE_TODO") {
+        const todos = loadTodos(key);
+        todos.splice(e.data.index, 1);
+        saveTodos(key, todos);
+        e.source.postMessage({ type: "TODOS_DATA", todos: todos, dateKey: key }, "*");
+    }
+});
+
+</script>
 
 </body>
 </html>
