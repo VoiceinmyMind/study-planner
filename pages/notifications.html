@@ -400,6 +400,13 @@ function toggleNotification(subject) {
 
         localStorage.removeItem(key);
 
+        // Remove this subject's study
+        // sessions from the calendar again
+        removeStudySessions(subject);
+
+        // Remove the exam entry itself
+        removeExamEntry(subject);
+
     } else {
 
         localStorage.setItem(
@@ -407,8 +414,300 @@ function toggleNotification(subject) {
             "true"
         );
 
+        // Find the exam date for this
+        // subject and create study sessions
+        const examDate =
+            findExamDate(subject);
+
+        if (examDate) {
+
+            generateStudySessions(
+                subject,
+                examDate
+            );
+
+            addExamEntry(
+                subject,
+                examDate
+            );
+
+        }
+
     }
 
+}
+
+// ── Find exam date for a subject in current degree ─────
+function findExamDate(subject) {
+
+    const semesterData =
+        exams[degree] || {};
+
+    let foundDate = null;
+
+    Object.values(semesterData).forEach(
+        semesterExams => {
+
+            semesterExams.forEach(exam => {
+
+                if (exam.subject === subject) {
+                    foundDate = exam.date;
+                }
+
+            });
+
+        }
+    );
+
+    return foundDate;
+
+}
+
+// ── Calendar helpers (same format as calendar.html) ────
+function dateKeyFromDate(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+function loadCalTodos(key) {
+    return JSON.parse(
+        localStorage.getItem("cal_todos_" + key) || "[]"
+    );
+}
+
+function saveCalTodos(key, todos) {
+    localStorage.setItem(
+        "cal_todos_" + key,
+        JSON.stringify(todos)
+    );
+}
+
+// ── Generate study sessions: 30 min per day until the exam ─
+function generateStudySessions(subject, examDateStr) {
+
+    const examDate = new Date(examDateStr);
+    examDate.setHours(0,0,0,0);
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    // If the exam already passed, do nothing
+    if (examDate <= today) return;
+
+    // Study sessions start at 17:00 by default
+    // and last 30 minutes. If the day already
+    // has other study sessions (or private
+    // appointments), the next free slot after
+    // that is used instead, so nothing overlaps.
+    const defaultStartMinutes = 17 * 60;
+
+    let cursor = new Date(today);
+
+    while (cursor < examDate) {
+
+        const key = dateKeyFromDate(cursor);
+        const todos = loadCalTodos(key);
+
+        // Don't add it twice if a session for
+        // this subject already exists that day
+        const alreadyExists = todos.some(
+            t => t.studySubject === subject
+        );
+
+        if (!alreadyExists) {
+
+            const startMinutes =
+                findNextFreeSlot(todos, defaultStartMinutes);
+
+            const time = formatTime(
+                Math.floor(startMinutes / 60),
+                startMinutes % 60
+            );
+
+            todos.push({
+                text: `📘 ${time} – Study session: ${subject} (30 min)`,
+                color: "#38bdf8",
+                done: false,
+                studySubject: subject,
+                startMinutes: startMinutes
+            });
+
+            saveCalTodos(key, todos);
+
+        }
+
+        cursor.setDate(cursor.getDate() + 1);
+
+    }
+
+}
+
+// ── Find the next free 30-minute slot from a preferred time ─
+function findNextFreeSlot(todos, preferredStartMinutes) {
+
+    // All times already taken that day
+    // (other study sessions + private
+    // appointments), each treated as a
+    // 30-minute block
+    const taken = todos
+        .filter(t => typeof t.startMinutes === "number")
+        .map(t => t.startMinutes)
+        .sort((a, b) => a - b);
+
+    let slot = preferredStartMinutes;
+
+    while (taken.includes(slot)) {
+        slot += 30;
+    }
+
+    return slot;
+
+}
+
+// ── Remove study sessions for a subject again ──────────
+function removeStudySessions(subject) {
+
+    Object.keys(localStorage).forEach(storageKey => {
+
+        if (!storageKey.startsWith("cal_todos_")) return;
+
+        const todos = JSON.parse(
+            localStorage.getItem(storageKey) || "[]"
+        );
+
+        const filtered = todos.filter(
+            t => t.studySubject !== subject
+        );
+
+        if (filtered.length !== todos.length) {
+            localStorage.setItem(
+                storageKey,
+                JSON.stringify(filtered)
+            );
+
+            // close the gap: shift the remaining
+            // study sessions on this day back so
+            // there's no empty 30-min hole left
+            const dateKey = storageKey.replace("cal_todos_", "");
+            compactStudySessions(dateKey);
+        }
+
+    });
+
+}
+
+// ── Close time gaps between study sessions on a day ────
+// Private appointments and manual todos keep their
+// time. Only the study sessions are re-packed, in their
+// existing order, starting from the default time and
+// sliding forward around anything already booked.
+function compactStudySessions(key) {
+
+    const todos = loadCalTodos(key);
+
+    const studyEntries = todos.filter(t => t.studySubject);
+    if (!studyEntries.length) return;
+
+    // sort by their current time so the
+    // relative order of subjects is kept
+    studyEntries.sort((a, b) => {
+        const ta = typeof a.startMinutes === "number" ? a.startMinutes : Infinity;
+        const tb = typeof b.startMinutes === "number" ? b.startMinutes : Infinity;
+        return ta - tb;
+    });
+
+    const fixedEntries = todos.filter(t => !t.studySubject);
+    const defaultStartMinutes = 17 * 60;
+
+    // entries already placed in this pass, so the
+    // next study session slides past them too
+    const placed = [];
+
+    studyEntries.forEach(entry => {
+
+        const startMinutes = findNextFreeSlot(
+            fixedEntries.concat(placed),
+            defaultStartMinutes
+        );
+
+        entry.startMinutes = startMinutes;
+
+        const time = formatTime(
+            Math.floor(startMinutes / 60),
+            startMinutes % 60
+        );
+
+        entry.text = entry.text.replace(/^📘 \d{2}:\d{2}/, `📘 ${time}`);
+
+        placed.push(entry);
+
+    });
+
+    saveCalTodos(key, fixedEntries.concat(studyEntries));
+
+}
+
+// ── Add the exam itself to the calendar ────────────────
+function addExamEntry(subject, examDateStr) {
+
+    const examDate = new Date(examDateStr);
+    examDate.setHours(0,0,0,0);
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    // Don't add exams that already passed
+    if (examDate < today) return;
+
+    const key = dateKeyFromDate(examDate);
+    const todos = loadCalTodos(key);
+
+    const alreadyExists = todos.some(
+        t => t.examSubject === subject
+    );
+
+    if (alreadyExists) return;
+
+    // Exams are shown as an all-day style
+    // entry at the top, marked in red
+    todos.unshift({
+        text: `📝 Exam: ${subject}`,
+        color: "#f87171",
+        done: false,
+        examSubject: subject
+    });
+
+    saveCalTodos(key, todos);
+
+}
+
+// ── Remove the exam entry for a subject again ──────────
+function removeExamEntry(subject) {
+
+    Object.keys(localStorage).forEach(key => {
+
+        if (!key.startsWith("cal_todos_")) return;
+
+        const todos = JSON.parse(
+            localStorage.getItem(key) || "[]"
+        );
+
+        const filtered = todos.filter(
+            t => t.examSubject !== subject
+        );
+
+        if (filtered.length !== todos.length) {
+            localStorage.setItem(
+                key,
+                JSON.stringify(filtered)
+            );
+        }
+
+    });
+
+}
+
+function formatTime(hour, minute) {
+    return `${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`;
 }
 
 semesterSelect.addEventListener(

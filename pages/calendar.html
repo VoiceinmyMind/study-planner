@@ -325,6 +325,61 @@
         }
 
         .upcoming-text { color: #cbd5e1; flex: 1; }
+
+        /* ── Private calendar sync ── */
+        .sync-card {
+            flex: 0 0 auto;
+        }
+
+        .sync-desc {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin: 0 0 16px 0;
+        }
+
+        .sync-btn {
+            width: 100%;
+            text-align: center;
+        }
+
+        .sync-btn.connected {
+            background: #1e293b;
+            color: #22c55e;
+            cursor: default;
+        }
+
+        .sync-btn.connected:hover {
+            background: #1e293b;
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #22c55e;
+            font-size: 0.85rem;
+            margin-top: 12px;
+        }
+
+        .sync-status .dot-live {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            flex-shrink: 0;
+            animation: pulse 1.6s infinite;
+        }
+
+        @keyframes pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+            70%  { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+            100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+        }
+
+        .todo-dot.private {
+            border: 1px solid rgba(255,255,255,0.4);
+        }
     </style>
 </head>
 <body>
@@ -361,6 +416,18 @@
 
     <!-- RIGHT: Sidebar -->
     <div class="sidebar">
+
+        <!-- Private Calendar Sync -->
+        <div class="todo-card sync-card" id="syncCard">
+            <h3>🔗 Private Calendar</h3>
+            <p class="sync-desc" id="syncDesc">
+                Connect your private calendar so study sessions
+                automatically work around your existing appointments.
+            </p>
+            <button class="add-btn sync-btn" id="syncBtn" onclick="connectPrivateCalendar()">
+                Connect Calendar
+            </button>
+        </div>
 
         <!-- Todo Panel -->
         <div class="todo-card">
@@ -530,7 +597,19 @@ function renderTodoList() {
         return;
     }
 
-    todos.forEach((todo, i) => {
+    // Sort by time so the earliest entry is on top.
+    // Todos without a time (manually added ones) are
+    // shown last. The original array index is kept
+    // around so toggle/delete still hit the right item.
+    const sorted = todos
+        .map((todo, i) => ({ todo, i }))
+        .sort((a, b) => {
+            const ta = typeof a.todo.startMinutes === "number" ? a.todo.startMinutes : Infinity;
+            const tb = typeof b.todo.startMinutes === "number" ? b.todo.startMinutes : Infinity;
+            return ta - tb;
+        });
+
+    sorted.forEach(({ todo, i }) => {
         const item = document.createElement("div");
         item.className = "todo-item";
 
@@ -605,6 +684,15 @@ function renderUpcoming() {
         d.setDate(d.getDate() + i);
         const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
         const todos = loadTodos(key).filter(t => !t.done);
+
+        // sort same-day entries by time so the
+        // earliest one comes first
+        todos.sort((a, b) => {
+            const ta = typeof a.startMinutes === "number" ? a.startMinutes : Infinity;
+            const tb = typeof b.startMinutes === "number" ? b.startMinutes : Infinity;
+            return ta - tb;
+        });
+
         todos.forEach(t => upcoming.push({ date: d, text: t.text, color: t.color }));
     }
 
@@ -652,7 +740,52 @@ function goToday() {
     selectDay(key);
 }
 
+// ── Remove past study sessions (private appointments stay) ─
+function removePastStudySessions() {
+
+    const todayCutoff = new Date();
+    todayCutoff.setHours(0,0,0,0);
+
+    Object.keys(localStorage).forEach(storageKey => {
+
+        if (!storageKey.startsWith("cal_todos_")) return;
+
+        const dateStr = storageKey.replace("cal_todos_", "");
+        const [y, m, d] = dateStr.split("-").map(Number);
+
+        if (!y || !m || !d) return;
+
+        const entryDate = new Date(y, m - 1, d);
+
+        // only days strictly before today are "past"
+        if (entryDate >= todayCutoff) return;
+
+        const todos = JSON.parse(
+            localStorage.getItem(storageKey) || "[]"
+        );
+
+        // keep private appointments and manual todos,
+        // only drop study sessions (and past exam markers)
+        const filtered = todos.filter(
+            t => !t.studySubject && !t.examSubject
+        );
+
+        if (filtered.length !== todos.length) {
+
+            if (filtered.length) {
+                localStorage.setItem(storageKey, JSON.stringify(filtered));
+            } else {
+                localStorage.removeItem(storageKey);
+            }
+
+        }
+
+    });
+
+}
+
 // ── Init ───────────────────────────────────────────────
+removePastStudySessions();
 buildColorPicker();
 renderCalendar();
 renderUpcoming();
@@ -660,6 +793,177 @@ renderUpcoming();
 // Auto-select today
 const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
 selectDay(todayKey);
+
+// ── Private calendar sync (Demo) ───────────────────────
+const PRIVATE_EVENT_POOL = [
+    { label: "Dentist appointment",      icon: "🦷", duration: 60  },
+    { label: "Work shift",               icon: "💼", duration: 240 },
+    { label: "Gym session",              icon: "🏋️", duration: 60  },
+    { label: "Family dinner",            icon: "🍽️", duration: 90  },
+    { label: "Doctor's appointment",     icon: "🩺", duration: 45  },
+    { label: "Car service",              icon: "🚗", duration: 90  },
+    { label: "Birthday party",           icon: "🎉", duration: 120 },
+    { label: "Hairdresser",              icon: "✂️", duration: 45  },
+    { label: "Job interview",            icon: "🧑‍💼", duration: 60 },
+    { label: "Group project meeting",    icon: "👥", duration: 60  },
+    { label: "Volunteering",             icon: "🤝", duration: 120 },
+    { label: "Yoga class",               icon: "🧘", duration: 60  }
+];
+
+function initSyncButton() {
+    const btn = document.getElementById("syncBtn");
+    const desc = document.getElementById("syncDesc");
+    const connected = localStorage.getItem("privateCalendarConnected");
+
+    if (connected) {
+        btn.textContent = "✓ Connected";
+        btn.classList.add("connected");
+        btn.onclick = null;
+        desc.innerHTML =
+            'Your private calendar is connected. Study sessions are ' +
+            'automatically planned around your existing appointments.' +
+            '<div class="sync-status"><span class="dot-live"></span>Synced just now</div>';
+    }
+}
+
+function connectPrivateCalendar() {
+    const btn = document.getElementById("syncBtn");
+    btn.textContent = "Connecting…";
+    btn.disabled = true;
+
+    // Demo: short "loading" pause so it feels
+    // like a real sync with an external calendar
+    setTimeout(() => {
+        generatePrivateEvents();
+        rescheduleStudySessionsAroundPrivateEvents();
+
+        localStorage.setItem("privateCalendarConnected", "true");
+        btn.disabled = false;
+        initSyncButton();
+
+        renderCalendar();
+        renderTodoList();
+        renderUpcoming();
+    }, 900);
+}
+
+// Generates a handful of random private
+// appointments for the next ~3 months (demo data)
+function generatePrivateEvents() {
+    const start = new Date();
+    start.setHours(0,0,0,0);
+
+    const totalDays = 90; // roughly 3 months
+    let eventsPlaced = 0;
+    const targetEvents = 22; // roughly 2 private appointments per week
+
+    for (let i = 0; i < totalDays && eventsPlaced < targetEvents; i++) {
+
+        // not every day gets an event, keep it irregular
+        if (Math.random() > 0.28) continue;
+
+        const d = new Date(start);
+        d.setDate(d.getDate() + i);
+
+        // weekends are booked less often
+        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+        if (isWeekend && Math.random() > 0.35) continue;
+
+        const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+        const todos = loadTodos(key);
+
+        // already a private appointment that day? then skip
+        if (todos.some(t => t.isPrivate)) continue;
+
+        const pick = PRIVATE_EVENT_POOL[
+            Math.floor(Math.random() * PRIVATE_EVENT_POOL.length)
+        ];
+
+        // appointments are mostly during the day, morning or afternoon
+        const hourOptions = [9, 10, 11, 13, 14, 15, 16, 18];
+        const hour = hourOptions[Math.floor(Math.random() * hourOptions.length)];
+        const startMinutes = hour * 60;
+
+        const timeLabel = `${String(hour).padStart(2,"0")}:00`;
+
+        todos.push({
+            text: `${pick.icon} ${timeLabel} – ${pick.label}`,
+            color: "#a78bfa",
+            done: false,
+            isPrivate: true,
+            startMinutes: startMinutes,
+            durationMinutes: pick.duration
+        });
+
+        saveTodos(key, todos);
+        eventsPlaced++;
+    }
+}
+
+// Moves study sessions that collide in time with a
+// private appointment on the same day to the next
+// free half-hour slot afterwards (purely visual, so
+// it looks like an automatic adjustment)
+function rescheduleStudySessionsAroundPrivateEvents() {
+
+    Object.keys(localStorage).forEach(storageKey => {
+
+        if (!storageKey.startsWith("cal_todos_")) return;
+
+        const todos = JSON.parse(
+            localStorage.getItem(storageKey) || "[]"
+        );
+
+        const privateRanges = todos
+            .filter(t => t.isPrivate && typeof t.startMinutes === "number")
+            .map(t => ({
+                start: t.startMinutes,
+                end: t.startMinutes + (t.durationMinutes || 30)
+            }));
+
+        if (!privateRanges.length) return;
+
+        let changed = false;
+
+        todos.forEach(t => {
+
+            if (!t.studySubject || typeof t.startMinutes !== "number") return;
+
+            let start = t.startMinutes;
+            let collides = privateRanges.some(
+                r => start < r.end && (start + 30) > r.start
+            );
+
+            // keep trying 30 min later while it still collides
+            let guard = 0;
+            while (collides && guard < 20) {
+                start += 30;
+                collides = privateRanges.some(
+                    r => start < r.end && (start + 30) > r.start
+                );
+                guard++;
+            }
+
+            if (start !== t.startMinutes) {
+                t.startMinutes = start;
+                const h = Math.floor(start / 60);
+                const m = start % 60;
+                const timeLabel = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+                t.text = t.text.replace(/^📘 \d{2}:\d{2}/, `📘 ${timeLabel}`);
+                changed = true;
+            }
+
+        });
+
+        if (changed) {
+            localStorage.setItem(storageKey, JSON.stringify(todos));
+        }
+
+    });
+
+}
+
+initSyncButton();
 
 // ── postMessage bridge for index.html ──────────────────
 window.addEventListener("message", function(e) {
