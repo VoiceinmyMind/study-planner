@@ -481,6 +481,19 @@ function saveCalTodos(key, todos) {
     );
 }
 
+// ── Work days (used to time study sessions around them) ─
+// Tuesday and Friday are treated as work days with a
+// fixed work block, so study sessions start later on
+// those days. On all other days, study starts around
+// midday since there's no work block in the way.
+const WORK_DAYS = [2, 5]; // 0 = Sunday … 6 = Saturday
+const WORK_DAY_STUDY_START = 17 * 60;   // 17:00 on work days
+const FREE_DAY_STUDY_START = 12 * 60;   // 12:00 on free days
+
+function isWorkDay(date) {
+    return WORK_DAYS.includes(date.getDay());
+}
+
 // ── Generate study sessions: 30 min per day until the exam ─
 function generateStudySessions(subject, examDateStr) {
 
@@ -492,13 +505,6 @@ function generateStudySessions(subject, examDateStr) {
 
     // If the exam already passed, do nothing
     if (examDate <= today) return;
-
-    // Study sessions start at 17:00 by default
-    // and last 30 minutes. If the day already
-    // has other study sessions (or private
-    // appointments), the next free slot after
-    // that is used instead, so nothing overlaps.
-    const defaultStartMinutes = 17 * 60;
 
     let cursor = new Date(today);
 
@@ -514,6 +520,15 @@ function generateStudySessions(subject, examDateStr) {
         );
 
         if (!alreadyExists) {
+
+            // Study sessions start later on work days
+            // (after the work block) and around midday
+            // on free days. If the day already has other
+            // study sessions or appointments, the next
+            // free slot after that is used instead.
+            const defaultStartMinutes = isWorkDay(cursor)
+                ? WORK_DAY_STUDY_START
+                : FREE_DAY_STUDY_START;
 
             const startMinutes =
                 findNextFreeSlot(todos, defaultStartMinutes);
@@ -616,7 +631,14 @@ function compactStudySessions(key) {
     });
 
     const fixedEntries = todos.filter(t => !t.studySubject);
-    const defaultStartMinutes = 17 * 60;
+
+    // figure out the weekday for this date key so the
+    // gap-filling uses the same work/free day default
+    const [y, m, d] = key.split("-").map(Number);
+    const dateForKey = new Date(y, m - 1, d);
+    const defaultStartMinutes = isWorkDay(dateForKey)
+        ? WORK_DAY_STUDY_START
+        : FREE_DAY_STUDY_START;
 
     // entries already placed in this pass, so the
     // next study session slides past them too

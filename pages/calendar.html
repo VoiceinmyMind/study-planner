@@ -124,6 +124,14 @@
             font-weight: 600;
         }
 
+        .work-day-marker {
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            font-size: 0.7rem;
+            line-height: 1;
+        }
+
         .dot-row {
             display: flex;
             gap: 3px;
@@ -548,6 +556,18 @@ function renderCalendar() {
         num.textContent = d;
         cell.appendChild(num);
 
+        // Work day marker: a clear briefcase icon
+        // instead of relying only on a small dot,
+        // so work days stand out at a glance
+        const hasWorkBlock = todos.some(t => t.isWorkBlock);
+        if (hasWorkBlock) {
+            const work = document.createElement("div");
+            work.className = "work-day-marker";
+            work.textContent = "💼";
+            work.title = "Work day";
+            cell.appendChild(work);
+        }
+
         // Colored dots for todos
         if (todos.length) {
             const dotRow = document.createElement("div");
@@ -795,20 +815,6 @@ const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate())
 selectDay(todayKey);
 
 // ── Private calendar sync (Demo) ───────────────────────
-const PRIVATE_EVENT_POOL = [
-    { label: "Dentist appointment",      icon: "🦷", duration: 60  },
-    { label: "Work shift",               icon: "💼", duration: 240 },
-    { label: "Gym session",              icon: "🏋️", duration: 60  },
-    { label: "Family dinner",            icon: "🍽️", duration: 90  },
-    { label: "Doctor's appointment",     icon: "🩺", duration: 45  },
-    { label: "Car service",              icon: "🚗", duration: 90  },
-    { label: "Birthday party",           icon: "🎉", duration: 120 },
-    { label: "Hairdresser",              icon: "✂️", duration: 45  },
-    { label: "Job interview",            icon: "🧑‍💼", duration: 60 },
-    { label: "Group project meeting",    icon: "👥", duration: 60  },
-    { label: "Volunteering",             icon: "🤝", duration: 120 },
-    { label: "Yoga class",               icon: "🧘", duration: 60  }
-];
 
 function initSyncButton() {
     const btn = document.getElementById("syncBtn");
@@ -847,43 +853,113 @@ function connectPrivateCalendar() {
     }, 900);
 }
 
-// Generates a handful of random private
-// appointments for the next ~3 months (demo data)
+// ── Work days (Tuesday & Friday) ───────────────────────
+// These two days get a fixed work block. Private
+// appointments and study sessions are timed around it:
+// late in the evening on work days, around midday on
+// the other (free) days — so the schedule looks like it
+// actually takes the work block into account.
+const WORK_DAYS = [2, 5]; // 0 = Sunday … 6 = Saturday
+const WORK_BLOCK_START_MINUTES = 8 * 60 + 30;  // 08:30
+const WORK_BLOCK_END_MINUTES   = 15 * 60 + 30; // 15:30
+
+function isWorkDay(date) {
+    return WORK_DAYS.includes(date.getDay());
+}
+
+// Appointments that make sense right after a work day
+// (short, late-afternoon/evening errands)
+const WORK_DAY_EVENT_POOL = [
+    { label: "Dentist appointment",  icon: "🦷", duration: 60 },
+    { label: "Gym session",          icon: "🏋️", duration: 60 },
+    { label: "Doctor's appointment", icon: "🩺", duration: 45 },
+    { label: "Hairdresser",          icon: "✂️", duration: 45 },
+    { label: "Family dinner",        icon: "🍽️", duration: 90 },
+    { label: "Yoga class",           icon: "🧘", duration: 60 }
+];
+
+// Appointments for free days, spread around midday
+const FREE_DAY_EVENT_POOL = [
+    { label: "Dentist appointment",      icon: "🦷", duration: 60  },
+    { label: "Doctor's appointment",     icon: "🩺", duration: 45  },
+    { label: "Car service",              icon: "🚗", duration: 90  },
+    { label: "Birthday party",           icon: "🎉", duration: 120 },
+    { label: "Hairdresser",              icon: "✂️", duration: 45  },
+    { label: "Job interview",            icon: "🧑‍💼", duration: 60 },
+    { label: "Group project meeting",    icon: "👥", duration: 60  },
+    { label: "Volunteering",             icon: "🤝", duration: 120 },
+    { label: "Family dinner",            icon: "🍽️", duration: 90  }
+];
+
+// Generates a handful of private appointments for the
+// next ~3 months, plus a recurring work block on Tuesdays
+// and Fridays (demo data)
 function generatePrivateEvents() {
     const start = new Date();
     start.setHours(0,0,0,0);
 
     const totalDays = 90; // roughly 3 months
-    let eventsPlaced = 0;
-    const targetEvents = 22; // roughly 2 private appointments per week
 
-    for (let i = 0; i < totalDays && eventsPlaced < targetEvents; i++) {
-
-        // not every day gets an event, keep it irregular
-        if (Math.random() > 0.28) continue;
+    for (let i = 0; i < totalDays; i++) {
 
         const d = new Date(start);
         d.setDate(d.getDate() + i);
 
-        // weekends are booked less often
-        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-        if (isWeekend && Math.random() > 0.35) continue;
-
         const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
         const todos = loadTodos(key);
 
-        // already a private appointment that day? then skip
-        if (todos.some(t => t.isPrivate)) continue;
+        const workDay = isWorkDay(d);
 
-        const pick = PRIVATE_EVENT_POOL[
-            Math.floor(Math.random() * PRIVATE_EVENT_POOL.length)
-        ];
+        // ── Work block on Tuesdays & Fridays ──
+        if (workDay && !todos.some(t => t.isWorkBlock)) {
 
-        // appointments are mostly during the day, morning or afternoon
-        const hourOptions = [9, 10, 11, 13, 14, 15, 16, 18];
-        const hour = hourOptions[Math.floor(Math.random() * hourOptions.length)];
+            todos.push({
+                text: "💼 Work 8:30 until 15:30",
+                color: "#fb923c",
+                done: false,
+                isPrivate: true,
+                isWorkBlock: true,
+                startMinutes: WORK_BLOCK_START_MINUTES,
+                durationMinutes: WORK_BLOCK_END_MINUTES - WORK_BLOCK_START_MINUTES
+            });
+
+        }
+
+        // already have a (non-work) private appointment
+        // that day? then don't add another one
+        if (todos.some(t => t.isPrivate && !t.isWorkBlock)) {
+            saveTodos(key, todos);
+            continue;
+        }
+
+        // not every day gets an extra appointment,
+        // keep it irregular
+        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+        const skipChance = isWeekend ? 0.65 : 0.55;
+        if (Math.random() < skipChance) {
+            saveTodos(key, todos);
+            continue;
+        }
+
+        let pick, hour;
+
+        if (workDay) {
+            // after work, so early evening
+            pick = WORK_DAY_EVENT_POOL[
+                Math.floor(Math.random() * WORK_DAY_EVENT_POOL.length)
+            ];
+            const hourOptions = [16, 17, 18];
+            hour = hourOptions[Math.floor(Math.random() * hourOptions.length)];
+        } else {
+            // free day, so around midday
+            pick = FREE_DAY_EVENT_POOL[
+                Math.floor(Math.random() * FREE_DAY_EVENT_POOL.length)
+            ];
+            const hourOptions = [10, 11, 12, 13];
+            hour = hourOptions[Math.floor(Math.random() * hourOptions.length)];
+        }
+
         const startMinutes = hour * 60;
-
         const timeLabel = `${String(hour).padStart(2,"0")}:00`;
 
         todos.push({
@@ -896,7 +972,6 @@ function generatePrivateEvents() {
         });
 
         saveTodos(key, todos);
-        eventsPlaced++;
     }
 }
 

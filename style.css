@@ -309,6 +309,8 @@ nav a:hover {
 
     width: 100%;
 
+    max-width: 560px;
+
     pointer-events: none;
 }
 
@@ -318,7 +320,7 @@ nav a:hover {
 
     line-height: 1.05;
 
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .hero p {
@@ -348,19 +350,17 @@ nav a:hover {
     border-bottom: none;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1500px) {
 
     .top-section {
 
-        display: flex;
+        display: grid;
 
-        flex-direction: column;
+        grid-template-columns: minmax(220px, 320px) minmax(0, 1fr) minmax(280px, 340px);
 
         align-items: center;
 
-        justify-content: center;
-
-        gap: 30px;
+        gap: 20px;
 
         padding-top: 40px;
 
@@ -375,6 +375,12 @@ nav a:hover {
 
         width: auto;
 
+        max-width: none;
+
+        grid-column: 2;
+
+        min-width: 0;
+
         pointer-events: auto;
     }
 
@@ -384,13 +390,64 @@ nav a:hover {
 
         transform: none;
 
-        margin-top: 10px;
+        margin-top: 0;
+
+        grid-column: 1;
+
+        max-width: none;
+    }
+
+    .todo-widget {
+
+        grid-column: 3;
+
+        margin-left: 0;
+
+        margin-right: 0;
+
+        min-width: 0;
+
+        max-width: none;
     }
 
     .hero h1 {
 
-        font-size: 3rem;
+        font-size: 2.5rem;
 
-        white-space: normal;
+        white-space: nowrap;
+    }
+
+    .hero p {
+
+        font-size: 1rem;
+
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 800px) {
+
+    .top-section {
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 25px;
+    }
+
+    .hero,
+    .exam-alert,
+    .todo-widget {
+
+        grid-column: auto;
+
+        width: 100%;
+
+        max-width: 420px;
     }
 }
