@@ -1040,38 +1040,6 @@ function rescheduleStudySessionsAroundPrivateEvents() {
 
 initSyncButton();
 
-// ── postMessage bridge for index.html ──────────────────
-window.addEventListener("message", function(e) {
-    const now = new Date();
-    const key = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
-
-    if (e.data && e.data.type === "GET_TODOS") {
-        const todos = loadTodos(key);
-        e.source.postMessage({ type: "TODOS_DATA", todos: todos, dateKey: key }, "*");
-    }
-
-    if (e.data && e.data.type === "SAVE_TODO") {
-        const todos = loadTodos(key);
-        todos.push({ text: e.data.text, color: "#38bdf8", done: false });
-        saveTodos(key, todos);
-        e.source.postMessage({ type: "TODOS_DATA", todos: todos, dateKey: key }, "*");
-    }
-
-    if (e.data && e.data.type === "TOGGLE_TODO") {
-        const todos = loadTodos(key);
-        todos[e.data.index].done = !todos[e.data.index].done;
-        saveTodos(key, todos);
-        e.source.postMessage({ type: "TODOS_DATA", todos: todos, dateKey: key }, "*");
-    }
-
-    if (e.data && e.data.type === "DELETE_TODO") {
-        const todos = loadTodos(key);
-        todos.splice(e.data.index, 1);
-        saveTodos(key, todos);
-        e.source.postMessage({ type: "TODOS_DATA", todos: todos, dateKey: key }, "*");
-    }
-});
-
 </script>
 
 </body>

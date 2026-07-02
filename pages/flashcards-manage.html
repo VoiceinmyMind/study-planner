@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Manage Flashcards</title>
+
+    <link rel="stylesheet"
+          href="flashcards-manage.css">
+</head>
+<body>
+
+<nav>
+
+    <a href="flashcards.html" class="nav-link" id="studyLink">
+        ← Back to Study
+    </a>
+
+    <a href="../index.html" class="nav-link">
+        Home
+    </a>
+
+</nav>
+
+<div class="container">
+
+    <div class="page-header">
+        <p class="eyebrow">Manage Cards</p>
+        <div class="subject-picker">
+            <span class="subject-dot" id="subjectDot"></span>
+            <select id="subjectSelect"></select>
+        </div>
+    </div>
+
+    <div class="no-subjects" id="noSubjects">
+        <h2>No subjects yet</h2>
+        <p>Add a subject first, then come back here to add flashcards to it.</p>
+        <a href="subjects.html" class="cta-btn">Go to Subjects →</a>
+    </div>
+
+    <div id="manageContent">
+
+        <!-- ADD CARD -->
+        <section class="panel">
+
+            <h2>Add a card</h2>
+
+            <div class="add-card-form">
+                <textarea id="newCardFront" placeholder="Front — the question"></textarea>
+                <textarea id="newCardBack" placeholder="Back — the answer"></textarea>
+                <button id="addCardBtn" onclick="addCard()">+ Add card</button>
+            </div>
+
+            <p class="error-text" id="cardError"></p>
+
+        </section>
+
+        <!-- CARD LIST -->
+        <section class="panel">
+
+            <div class="panel-header-row">
+                <h2>Your cards</h2>
+                <span class="card-count" id="cardCount">0</span>
+            </div>
+
+            <div class="card-list" id="cardList"></div>
+
+        </section>
+
+        <!-- IMPORT / EXPORT -->
+        <section class="panel io-panel">
+
+            <div class="io-col">
+
+                <h2>Import a deck</h2>
+
+                <p class="io-hint">
+                    In Anki: <em>Notes → Export Notes → Notes in Plain Text (.txt)</em>.
+                    A simple .csv/.txt also works — one card per line, front and back
+                    separated by a tab, comma or semicolon. The file name becomes the
+                    subject if it doesn't exist yet.
+                </p>
+
+                <label class="file-drop" for="importFile">
+                    <span id="importFileLabel">Choose a file to import…</span>
+                </label>
+                <input type="file" id="importFile" accept=".txt,.csv" hidden>
+
+                <p class="io-status" id="importStatus"></p>
+
+            </div>
+
+            <div class="io-divider"></div>
+
+            <div class="io-col">
+
+                <h2>Export this subject</h2>
+
+                <p class="io-hint">
+                    Download every card in the selected subject as an
+                    Anki-compatible plain text file, ready to re-import
+                    here or straight into Anki.
+                </p>
+
+                <button class="export-btn" id="exportBtn" onclick="exportDeck()">
+                    ⇩ Export deck
+                </button>
+
+                <p class="io-status" id="exportStatus"></p>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</div>
+
+<script>
+
+// ── Subjects (added on the Subjects page) ───────────────
+const SUBJECT_COLORS = [
+    "#38bdf8", "#f87171", "#34d399", "#fbbf24",
+    "#a78bfa", "#f472b6", "#22d3ee", "#fb923c"
+];
+
+function loadSubjects() {
+    return JSON.parse(localStorage.getItem("subjects") || "[]");
+}
+
+function saveSubjects(subjects) {
+    localStorage.setItem("subjects", JSON.stringify(subjects));
+}
+
+function makeId() {
+    return "c_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// ── Card decks: { subjectName: [{ id, q, a }] } ─────────
+function loadDecks() {
+    return JSON.parse(localStorage.getItem("flashcardDecks") || "{}");
+}
+
+function saveDecks(decks) {
+    localStorage.setItem("flashcardDecks", JSON.stringify(decks));
+}
+
+// ── Elements ─────────────────────────────────────────────
+const subjectSelect = document.getElementById("subjectSelect");
+const subjectDot = document.getElementById("subjectDot");
+const studyLink = document.getElementById("studyLink");
+
+const noSubjects = document.getElementById("noSubjects");
+const manageContent = document.getElementById("manageContent");
+
+const cardList = document.getElementById("cardList");
+const cardCount = document.getElementById("cardCount");
+const cardError = document.getElementById("cardError");
+
+const importFile = document.getElementById("importFile");
+const importFileLabel = document.getElementById("importFileLabel");
+const importStatus = document.getElementById("importStatus");
+
+const exportStatus = document.getElementById("exportStatus");
+
+// ── Subject dropdown ─────────────────────────────────────
+function populateSubjectSelect(preferredName) {
+
+    const subjects = loadSubjects();
+
+    if (!subjects.length) {
+        noSubjects.style.display = "flex";
+        manageContent.style.display = "none";
+        return subjects;
+    }
+
+    noSubjects.style.display = "none";
+    manageContent.style.display = "block";
+
+    subjectSelect.innerHTML = "";
+
+    subjects.forEach(subject => {
+        const option = document.createElement("option");
+        option.textContent = subject.name;
+        option.value = subject.name;
+        subjectSelect.appendChild(option);
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const fromUrl = params.get("subject");
+    const target = preferredName || fromUrl;
+
+    if (target && subjects.some(s => s.name === target)) {
+        subjectSelect.value = target;
+    }
+
+    updateChrome(subjects);
+
+    return subjects;
+}
+
+function updateChrome(subjects) {
+    const subject = subjects.find(s => s.name === subjectSelect.value);
+    subjectDot.style.background = subject ? (subject.color || "#38bdf8") : "#38bdf8";
+    studyLink.href = subjectSelect.value
+        ? `flashcards.html?subject=${encodeURIComponent(subjectSelect.value)}`
+        : "flashcards.html";
+}
+
+subjectSelect.addEventListener("change", () => {
+    updateChrome(loadSubjects());
+    renderCardList();
+});
+
+// ── Card list ─────────────────────────────────────────────
+function renderCardList() {
+
+    cardList.innerHTML = "";
+
+    const selectedSubject = subjectSelect.value;
+    const cards = loadDecks()[selectedSubject] || [];
+
+    cardCount.textContent = cards.length;
+
+    if (!cards.length) {
+        cardList.innerHTML = '<p class="card-list-empty">No cards yet — add one above or import a deck below.</p>';
+        return;
+    }
+
+    cards.forEach(card => {
+
+        const row = document.createElement("div");
+        row.className = "card-row";
+        row.dataset.id = card.id;
+
+        row.innerHTML = `
+            <div class="card-row-view">
+                <div class="card-row-text">
+                    <span class="card-row-q">${escapeHtml(card.q)}</span>
+                    <span class="card-row-a">${escapeHtml(card.a)}</span>
+                </div>
+                <div class="card-row-actions">
+                    <button class="icon-btn edit-btn" title="Edit">✎</button>
+                    <button class="icon-btn del-btn" title="Delete">✕</button>
+                </div>
+            </div>
+            <div class="card-row-edit" hidden>
+                <textarea class="edit-front">${escapeHtml(card.q)}</textarea>
+                <textarea class="edit-back">${escapeHtml(card.a)}</textarea>
+                <div class="edit-actions">
+                    <button class="save-btn">Save</button>
+                    <button class="cancel-btn">Cancel</button>
+                </div>
+            </div>
+        `;
+
+        row.querySelector(".del-btn").onclick = () => deleteCard(card.id);
+        row.querySelector(".edit-btn").onclick = () => toggleEdit(row, true);
+        row.querySelector(".cancel-btn").onclick = () => toggleEdit(row, false);
+        row.querySelector(".save-btn").onclick = () => saveEdit(row, card.id);
+
+        cardList.appendChild(row);
+
+    });
+
+}
+
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function toggleEdit(row, editing) {
+    row.querySelector(".card-row-view").hidden = editing;
+    row.querySelector(".card-row-edit").hidden = !editing;
+}
+
+function saveEdit(row, id) {
+
+    const front = row.querySelector(".edit-front").value.trim();
+    const back = row.querySelector(".edit-back").value.trim();
+
+    if (!front || !back) return;
+
+    const selectedSubject = subjectSelect.value;
+    const decks = loadDecks();
+    const cards = decks[selectedSubject] || [];
+
+    const card = cards.find(c => c.id === id);
+    if (card) {
+        card.q = front;
+        card.a = back;
+    }
+
+    saveDecks(decks);
+    renderCardList();
+}
+
+function deleteCard(id) {
+
+    const selectedSubject = subjectSelect.value;
+    const decks = loadDecks();
+    decks[selectedSubject] = (decks[selectedSubject] || []).filter(c => c.id !== id);
+
+    saveDecks(decks);
+    renderCardList();
+}
+
+// ── Add card ──────────────────────────────────────────────
+function addCard() {
+
+    cardError.textContent = "";
+
+    const selectedSubject = subjectSelect.value;
+    if (!selectedSubject) return;
+
+    const frontInput = document.getElementById("newCardFront");
+    const backInput = document.getElementById("newCardBack");
+
+    const front = frontInput.value.trim();
+    const back = backInput.value.trim();
+
+    if (!front || !back) {
+        cardError.textContent = "Please fill in both the front and the back.";
+        return;
+    }
+
+    const decks = loadDecks();
+    if (!decks[selectedSubject]) decks[selectedSubject] = [];
+
+    decks[selectedSubject].push({ id: makeId(), q: front, a: back });
+    saveDecks(decks);
+
+    frontInput.value = "";
+    backInput.value = "";
+    frontInput.focus();
+
+    renderCardList();
+}
+
+// ── Import a deck (Anki plain-text export or simple CSV) ─
+function stripHtml(text) {
+    const div = document.createElement("div");
+    div.innerHTML = text;
+    return (div.textContent || "").trim();
+}
+
+function parseDeckText(text) {
+
+    const cards = [];
+
+    text.split(/\r?\n/).forEach(line => {
+
+        const trimmed = line.trim();
+
+        // Anki export headers/comments start with "#"
+        if (!trimmed || trimmed.startsWith("#")) return;
+
+        let parts;
+
+        if (trimmed.includes("\t")) {
+            parts = trimmed.split("\t");
+        } else if (trimmed.includes(";")) {
+            parts = trimmed.split(";");
+        } else if (trimmed.includes(",")) {
+            parts = trimmed.split(",");
+        } else {
+            return;
+        }
+
+        const front = stripHtml(parts[0] || "");
+        const back = stripHtml(parts[1] || "");
+
+        if (front && back) {
+            cards.push({ id: makeId(), q: front, a: back });
+        }
+
+    });
+
+    return cards;
+}
+
+function subjectNameFromFile(fileName) {
+    return fileName.replace(/\.[^/.]+$/, "").trim();
+}
+
+function ensureSubjectExists(name) {
+
+    const subjects = loadSubjects();
+
+    if (subjects.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+        return;
+    }
+
+    subjects.push({
+        id: makeId(),
+        name: name,
+        color: SUBJECT_COLORS[subjects.length % SUBJECT_COLORS.length],
+        examDate: null
+    });
+
+    saveSubjects(subjects);
+}
+
+importFile.addEventListener("change", () => {
+
+    const file = importFile.files[0];
+    if (!file) return;
+
+    importFileLabel.textContent = file.name;
+    importStatus.textContent = "Importing…";
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+
+        const parsedCards = parseDeckText(String(reader.result));
+
+        if (!parsedCards.length) {
+            importStatus.textContent =
+                "Couldn't find any cards in this file. Make sure each line has a front and a back separated by a tab, comma or semicolon.";
+            return;
+        }
+
+        const deckName = subjectNameFromFile(file.name);
+        ensureSubjectExists(deckName);
+
+        const decks = loadDecks();
+        if (!decks[deckName]) decks[deckName] = [];
+        decks[deckName] = decks[deckName].concat(parsedCards);
+        saveDecks(decks);
+
+        importStatus.textContent = `Imported ${parsedCards.length} card(s) into "${deckName}".`;
+
+        populateSubjectSelect(deckName);
+        renderCardList();
+
+        importFile.value = "";
+        importFileLabel.textContent = "Choose a file to import…";
+    };
+
+    reader.onerror = () => {
+        importStatus.textContent = "Couldn't read that file.";
+    };
+
+    reader.readAsText(file);
+
+});
+
+// ── Export the selected subject's deck ──────────────────
+function exportDeck() {
+
+    exportStatus.textContent = "";
+
+    const selectedSubject = subjectSelect.value;
+    if (!selectedSubject) return;
+
+    const cards = loadDecks()[selectedSubject] || [];
+
+    if (!cards.length) {
+        exportStatus.textContent = "This subject has no cards to export yet.";
+        return;
+    }
+
+    const lines = [
+        "#separator:tab",
+        "#html:false",
+        ...cards.map(c => `${c.q.replace(/\t/g, " ")}\t${c.a.replace(/\t/g, " ")}`)
+    ];
+
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${selectedSubject}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+
+    exportStatus.textContent = `Exported ${cards.length} card(s).`;
+}
+
+window.addCard = addCard;
+window.exportDeck = exportDeck;
+
+// ── Init ──────────────────────────────────────────────────
+populateSubjectSelect();
+renderCardList();
+
+</script>
+
+</body>
+</html>

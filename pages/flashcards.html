@@ -14,938 +14,270 @@
 
 <nav>
 
-    <a href="../index.html">
+    <a href="../index.html" class="nav-link">
         ← Home
+    </a>
+
+    <a href="flashcards-manage.html" class="nav-link nav-link-accent" id="manageLink">
+        Manage Cards →
     </a>
 
 </nav>
 
-<div class="container">
+<div class="study-container">
 
-    <h1>Flashcards</h1>
+    <div class="study-header">
 
-    <div class="selectors">
+        <p class="eyebrow">Study</p>
 
-        <div>
-
-            <label>Select Semester</label>
-
-            <select id="semesterSelect">
-
-                <option value="1">
-                    Semester 1
-                </option>
-
-                <option value="2">
-                    Semester 2
-                </option>
-
-                <option value="3">
-                    Semester 3
-                </option>
-
-                <option value="4">
-                    Semester 4
-                </option>
-
-                <option value="5">
-                    Semester 5
-                </option>
-
-                <option value="6">
-                    Semester 6
-                </option>
-
-            </select>
-
-        </div>
-
-        <div>
-
-            <label>Select Subject</label>
-
+        <div class="subject-picker">
+            <span class="subject-dot" id="subjectDot"></span>
             <select id="subjectSelect"></select>
-
         </div>
 
     </div>
 
-    <div class="flashcard">
+    <div class="deck-stack" id="deckStack">
 
-        <h2 id="question">
-            Select a subject first
-        </h2>
+        <div class="stack-card stack-card-2"></div>
+        <div class="stack-card stack-card-1"></div>
 
-        <button onclick="showAnswer()">
-            Show Answer
-        </button>
+        <div class="flip-card" id="flipCard" tabindex="0">
+            <div class="flip-card-inner" id="flipCardInner">
 
-        <p id="answer"></p>
+                <div class="flip-face flip-front">
+                    <span class="face-label">Question</span>
+                    <p id="questionText">Select a subject first</p>
+                    <span class="face-hint">Tap or press space to flip</span>
+                </div>
+
+                <div class="flip-face flip-back">
+                    <span class="face-label">Answer</span>
+                    <p id="answerText"></p>
+                    <span class="face-hint">Tap to flip back</span>
+                </div>
+
+            </div>
+        </div>
 
     </div>
 
-    <button class="next-btn"
-            onclick="nextCard()">
+    <div class="progress-row" id="progressRow">
+        <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="progress-label" id="progressLabel">0 / 0</span>
+    </div>
 
-        Next Random Card
+    <div class="controls-row" id="controlsRow">
+        <button class="ctrl-btn" id="prevBtn" onclick="prevCard()">← Prev</button>
+        <button class="ctrl-btn ctrl-btn-flip" onclick="flipCard()">Flip card</button>
+        <button class="ctrl-btn" id="nextBtn" onclick="nextCard()">Next →</button>
+    </div>
 
-    </button>
+    <div class="empty-state" id="emptyState">
+        <h2 id="emptyTitle">No subjects yet</h2>
+        <p id="emptyText">Add a subject first, then come back here to study.</p>
+        <a href="subjects.html" class="empty-cta" id="emptyCta">Go to Subjects →</a>
+    </div>
 
 </div>
 
 <script>
 
-const degree =
-    localStorage.getItem("degree");
-
-const subjects = {
-
-    informatics: {
-
-        1: [
-            "Programming 1",
-            "Mathematics",
-            "Business Management"
-        ],
-
-        2: [
-            "Databases",
-            "Web Development",
-            "Statistics"
-        ],
-
-        3: [
-            "Software Engineering",
-            "Networks",
-            "Accounting"
-        ],
-
-        4: [
-            "Cyber Security",
-            "Project Management",
-            "AI Basics"
-        ],
-
-        5: [
-            "Cloud Computing",
-            "Machine Learning",
-            "IT Consulting"
-        ],
-
-        6: [
-            "Bachelor Thesis",
-            "Business Analytics",
-            "ERP Systems"
-        ]
-
-    },
-
-    chemistry: {
-
-        1: [
-            "Organic Chemistry",
-            "Physics",
-            "Laboratory Basics"
-        ],
-
-        2: [
-            "Biochemistry",
-            "Chemical Analysis",
-            "Thermodynamics"
-        ],
-
-        3: [
-            "Inorganic Chemistry",
-            "Molecular Biology",
-            "Analytical Chemistry"
-        ],
-
-        4: [
-            "Pharmaceutical Chemistry",
-            "Environmental Chemistry",
-            "Spectroscopy"
-        ],
-
-        5: [
-            "Advanced Synthesis",
-            "Toxicology",
-            "Biotechnology"
-        ],
-
-        6: [
-            "Bachelor Thesis",
-            "Research Methods",
-            "Chemical Engineering"
-        ]
-
-    }
-
-};
-
-const flashcards = {
-
-    "Programming 1": [
-
-        {
-            q: "What is a variable?",
-            a: "A container for storing data"
-        },
-
-        {
-            q: "What does HTML stand for?",
-            a: "HyperText Markup Language"
-        },
-
-        {
-            q: "What is a function?",
-            a: "Reusable block of code"
-        },
-
-        {
-            q: "What is JavaScript used for?",
-            a: "Interactive websites"
-        },
-
-        {
-            q: "What does CSS do?",
-            a: "Styles websites"
-        }
-
-    ],
-
-    "Mathematics": [
-
-        {
-            q: "What is 5 x 5?",
-            a: "25"
-        },
-
-        {
-            q: "What is a derivative?",
-            a: "Rate of change"
-        },
-
-        {
-            q: "What is Pi?",
-            a: "3.14159"
-        }
-
-    ],
-
-    "Databases": [
-
-        {
-            q: "What is SQL?",
-            a: "Database query language"
-        },
-
-        {
-            q: "What is a table?",
-            a: "Structure storing data"
-        },
-
-        {
-            q: "What is a primary key?",
-            a: "Unique identifier"
-        },
-
-        {
-            q: "What is MySQL?",
-            a: "Database management system"
-        }
-
-    ],
-
-    "Cyber Security": [
-
-        {
-            q: "What is phishing?",
-            a: "Fake attempt to steal data"
-        },
-
-        {
-            q: "What is malware?",
-            a: "Malicious software"
-        },
-
-        {
-            q: "What does VPN stand for?",
-            a: "Virtual Private Network"
-        }
-
-    ],
-
-    "Organic Chemistry": [
-
-        {
-            q: "What is CH4?",
-            a: "Methane"
-        },
-
-        {
-            q: "What is carbon?",
-            a: "Chemical element"
-        },
-
-        {
-            q: "What is ethanol?",
-            a: "Alcohol compound"
-        },
-
-        {
-            q: "What is a molecule?",
-            a: "Group of atoms"
-        }
-
-    ],
-
-    "Physics": [
-
-        {
-            q: "What is gravity?",
-            a: "Force attracting objects"
-        },
-
-        {
-            q: "Who discovered gravity?",
-            a: "Isaac Newton"
-        },
-
-        {
-            q: "What is velocity?",
-            a: "Speed in a direction"
-        }
-
-    ],
-
-    "Biochemistry": [
-
-        {
-            q: "What is DNA?",
-            a: "Genetic material"
-        },
-
-        {
-            q: "What is protein?",
-            a: "Molecule made of amino acids"
-        },
-
-        {
-            q: "What is ATP?",
-            a: "Energy carrier in cells"
-        }
-
-    ],
-
-    "AI Basics": [
-
-        {
-            q: "What does AI stand for?",
-            a: "Artificial Intelligence"
-        },
-
-        {
-            q: "What is machine learning?",
-            a: "AI learning from data"
-        },
-
-        {
-            q: "What is a neural network?",
-            a: "AI model inspired by the brain"
-        }
-
-    ],
-
-    "Business Management": [
-
-    {
-        q: "What is management?",
-        a: "Coordinating resources efficiently"
-    },
-
-    {
-        q: "What is leadership?",
-        a: "Guiding a team"
-    },
-
-    {
-        q: "What is a company?",
-        a: "An organization selling products or services"
-    }
-
-],
-
-"Web Development": [
-
-    {
-        q: "What does CSS do?",
-        a: "Styles websites"
-    },
-
-    {
-        q: "What is HTML?",
-        a: "Markup language for websites"
-    },
-
-    {
-        q: "What is responsive design?",
-        a: "Design adapting to screen sizes"
-    }
-
-],
-
-"Statistics": [
-
-    {
-        q: "What is probability?",
-        a: "Chance of an event happening"
-    },
-
-    {
-        q: "What is average?",
-        a: "Mean value of numbers"
-    },
-
-    {
-        q: "What is a graph used for?",
-        a: "Visualizing data"
-    }
-
-],
-
-"Software Engineering": [
-
-    {
-        q: "What is software testing?",
-        a: "Checking software for errors"
-    },
-
-    {
-        q: "What is Agile?",
-        a: "Flexible development methodology"
-    },
-
-    {
-        q: "What is debugging?",
-        a: "Fixing code errors"
-    }
-
-],
-
-"Networks": [
-
-    {
-        q: "What is an IP address?",
-        a: "Unique network identifier"
-    },
-
-    {
-        q: "What does LAN stand for?",
-        a: "Local Area Network"
-    },
-
-    {
-        q: "What is a router?",
-        a: "Device forwarding internet traffic"
-    }
-
-],
-
-"Accounting": [
-
-    {
-        q: "What is revenue?",
-        a: "Income generated by a company"
-    },
-
-    {
-        q: "What is profit?",
-        a: "Revenue minus expenses"
-    },
-
-    {
-        q: "What is a balance sheet?",
-        a: "Overview of finances"
-    }
-
-],
-
-"Project Management": [
-
-    {
-        q: "What is a milestone?",
-        a: "Important project checkpoint"
-    },
-
-    {
-        q: "What is planning?",
-        a: "Organizing tasks and resources"
-    },
-
-    {
-        q: "What is teamwork?",
-        a: "Working together effectively"
-    }
-
-],
-
-"Cloud Computing": [
-
-    {
-        q: "What is cloud computing?",
-        a: "Using servers over the internet"
-    },
-
-    {
-        q: "What is AWS?",
-        a: "Amazon cloud platform"
-    },
-
-    {
-        q: "What is scalability?",
-        a: "Ability to handle growth"
-    }
-
-],
-
-"Machine Learning": [
-
-    {
-        q: "What is machine learning?",
-        a: "AI learning from data"
-    },
-
-    {
-        q: "What is training data?",
-        a: "Data used to teach AI"
-    },
-
-    {
-        q: "What is prediction?",
-        a: "AI estimating outcomes"
-    }
-
-],
-
-"IT Consulting": [
-
-    {
-        q: "What does an IT consultant do?",
-        a: "Advises companies on technology"
-    },
-
-    {
-        q: "What is digital transformation?",
-        a: "Modernizing business technology"
-    },
-
-    {
-        q: "What is optimization?",
-        a: "Improving efficiency"
-    }
-
-],
-
-"Business Analytics": [
-
-    {
-        q: "What is data analysis?",
-        a: "Examining information for insights"
-    },
-
-    {
-        q: "What is KPI?",
-        a: "Key Performance Indicator"
-    },
-
-    {
-        q: "What is forecasting?",
-        a: "Predicting future trends"
-    }
-
-],
-
-"ERP Systems": [
-
-    {
-        q: "What does ERP stand for?",
-        a: "Enterprise Resource Planning"
-    },
-
-    {
-        q: "What is SAP?",
-        a: "ERP software system"
-    },
-
-    {
-        q: "What is integration?",
-        a: "Connecting systems together"
-    }
-
-],
-
-"Laboratory Basics": [
-
-    {
-        q: "What is a microscope?",
-        a: "Tool for viewing tiny objects"
-    },
-
-    {
-        q: "Why wear gloves in labs?",
-        a: "For safety and protection"
-    },
-
-    {
-        q: "What is an experiment?",
-        a: "Scientific test or procedure"
-    }
-
-],
-
-"Chemical Analysis": [
-
-    {
-        q: "What is pH?",
-        a: "Measure of acidity"
-    },
-
-    {
-        q: "What is titration?",
-        a: "Method to measure concentration"
-    },
-
-    {
-        q: "What is a solution?",
-        a: "Mixture of substances"
-    }
-
-],
-
-"Thermodynamics": [
-
-    {
-        q: "What is heat?",
-        a: "Transfer of energy"
-    },
-
-    {
-        q: "What is temperature?",
-        a: "Measure of thermal energy"
-    },
-
-    {
-        q: "What is entropy?",
-        a: "Measure of disorder"
-    }
-
-],
-
-"Inorganic Chemistry": [
-
-    {
-        q: "What is NaCl?",
-        a: "Sodium chloride"
-    },
-
-    {
-        q: "What is a metal?",
-        a: "Conductive chemical element"
-    },
-
-    {
-        q: "What is oxidation?",
-        a: "Loss of electrons"
-    }
-
-],
-
-"Molecular Biology": [
-
-    {
-        q: "What is DNA?",
-        a: "Genetic material"
-    },
-
-    {
-        q: "What is RNA?",
-        a: "Molecule involved in protein synthesis"
-    },
-
-    {
-        q: "What is a cell?",
-        a: "Basic unit of life"
-    }
-
-],
-
-"Analytical Chemistry": [
-
-    {
-        q: "What is chromatography?",
-        a: "Method separating mixtures"
-    },
-
-    {
-        q: "What is analysis?",
-        a: "Detailed examination"
-    },
-
-    {
-        q: "What is spectroscopy?",
-        a: "Studying interaction with light"
-    }
-
-],
-
-"Pharmaceutical Chemistry": [
-
-    {
-        q: "What is a drug?",
-        a: "Chemical treating disease"
-    },
-
-    {
-        q: "What is dosage?",
-        a: "Amount of medication"
-    },
-
-    {
-        q: "What is aspirin?",
-        a: "Pain relief medication"
-    }
-
-],
-
-"Environmental Chemistry": [
-
-    {
-        q: "What causes pollution?",
-        a: "Harmful substances in environment"
-    },
-
-    {
-        q: "What is recycling?",
-        a: "Reusing materials"
-    },
-
-    {
-        q: "What is climate change?",
-        a: "Long-term weather changes"
-    }
-
-],
-
-"Spectroscopy": [
-
-    {
-        q: "What is light absorption?",
-        a: "Taking in light energy"
-    },
-
-    {
-        q: "What is UV spectroscopy?",
-        a: "Analysis using ultraviolet light"
-    },
-
-    {
-        q: "What is wavelength?",
-        a: "Distance between wave peaks"
-    }
-
-],
-
-"Advanced Synthesis": [
-
-    {
-        q: "What is synthesis?",
-        a: "Combining substances"
-    },
-
-    {
-        q: "What is a reaction?",
-        a: "Chemical change"
-    },
-
-    {
-        q: "What is catalyst?",
-        a: "Substance speeding reactions"
-    }
-
-],
-
-"Toxicology": [
-
-    {
-        q: "What is toxicity?",
-        a: "Degree of harmfulness"
-    },
-
-    {
-        q: "What is poison?",
-        a: "Harmful substance"
-    },
-
-    {
-        q: "What is exposure?",
-        a: "Contact with substances"
-    }
-
-],
-
-"Biotechnology": [
-
-    {
-        q: "What is biotechnology?",
-        a: "Technology using living organisms"
-    },
-
-    {
-        q: "What is fermentation?",
-        a: "Chemical process by microorganisms"
-    },
-
-    {
-        q: "What is bioengineering?",
-        a: "Engineering applied to biology"
-    }
-
-],
-
-"Research Methods": [
-
-    {
-        q: "What is a hypothesis?",
-        a: "Testable scientific idea"
-    },
-
-    {
-        q: "What is observation?",
-        a: "Collecting information"
-    },
-
-    {
-        q: "What is a conclusion?",
-        a: "Final research result"
-    }
-
-],
-
-"Chemical Engineering": [
-
-    {
-        q: "What is engineering?",
-        a: "Applying science practically"
-    },
-
-    {
-        q: "What is production?",
-        a: "Manufacturing products"
-    },
-
-    {
-        q: "What is efficiency?",
-        a: "Using resources effectively"
-    }
-
-]
-
-};
-
-const semesterSelect =
-    document.getElementById("semesterSelect");
-
-const subjectSelect =
-    document.getElementById("subjectSelect");
-
+// ── Subjects (added on the Subjects page) ───────────────
 function loadSubjects() {
+    return JSON.parse(localStorage.getItem("subjects") || "[]");
+}
 
-    const semester =
-        semesterSelect.value;
+// ── Card decks: { subjectName: [{ id, q, a }] } ─────────
+function loadDecks() {
+    return JSON.parse(localStorage.getItem("flashcardDecks") || "{}");
+}
+
+// ── Elements ─────────────────────────────────────────────
+const subjectSelect = document.getElementById("subjectSelect");
+const subjectDot = document.getElementById("subjectDot");
+const manageLink = document.getElementById("manageLink");
+
+const deckStack = document.getElementById("deckStack");
+const flipCard = document.getElementById("flipCard");
+const flipCardInner = document.getElementById("flipCardInner");
+const questionText = document.getElementById("questionText");
+const answerText = document.getElementById("answerText");
+
+const progressRow = document.getElementById("progressRow");
+const progressFill = document.getElementById("progressFill");
+const progressLabel = document.getElementById("progressLabel");
+const controlsRow = document.getElementById("controlsRow");
+
+const emptyState = document.getElementById("emptyState");
+const emptyTitle = document.getElementById("emptyTitle");
+const emptyText = document.getElementById("emptyText");
+const emptyCta = document.getElementById("emptyCta");
+
+let cards = [];
+let currentIndex = 0;
+let isFlipped = false;
+
+// ── Populate subject dropdown ────────────────────────────
+function populateSubjectSelect() {
+
+    const subjects = loadSubjects();
+
+    const params = new URLSearchParams(window.location.search);
+    const preferred = params.get("subject");
 
     subjectSelect.innerHTML = "";
 
-    const semesterSubjects =
-        subjects[degree][semester] || [];
-
-    semesterSubjects.forEach(subject => {
-
-        const option =
-            document.createElement("option");
-
-        option.textContent = subject;
-
+    subjects.forEach(subject => {
+        const option = document.createElement("option");
+        option.textContent = subject.name;
+        option.value = subject.name;
         subjectSelect.appendChild(option);
-
     });
 
+    if (preferred && subjects.some(s => s.name === preferred)) {
+        subjectSelect.value = preferred;
+    }
+
+    return subjects;
 }
 
-semesterSelect.addEventListener(
-    "change",
-    loadSubjects
-);
-
-loadSubjects();
-
-const question =
-    document.getElementById("question");
-
-const answer =
-    document.getElementById("answer");
-
-function showAnswer() {
-    answer.style.display = "block";
+function currentSubject(subjects) {
+    return subjects.find(s => s.name === subjectSelect.value);
 }
 
-let currentIndex = 0;
+// ── Render ───────────────────────────────────────────────
+function render() {
 
-function nextCard() {
+    const subjects = loadSubjects();
 
-    const selectedSubject =
-        subjectSelect.value;
+    manageLink.href = subjectSelect.value
+        ? `flashcards-manage.html?subject=${encodeURIComponent(subjectSelect.value)}`
+        : "flashcards-manage.html";
 
-        let reviewed =
-    Number(
-        localStorage.getItem(
-            "flashcards_" + selectedSubject
-        )
-    ) || 0;
-
-reviewed++;
-
-localStorage.setItem(
-    "flashcards_" + selectedSubject,
-    reviewed
-);
-
-    const cards =
-        flashcards[selectedSubject];
-
-    if(!cards || cards.length === 0) {
-
-        question.innerText =
-            "No flashcards yet";
-
-        answer.innerText = "";
-
+    if (!subjects.length) {
+        showEmpty(
+            "No subjects yet",
+            "Add a subject first, then come back here to study.",
+            "Go to Subjects →",
+            "subjects.html"
+        );
         return;
     }
 
-    if(currentIndex >= cards.length) {
-        currentIndex = 0;
+    const subject = currentSubject(subjects);
+    subjectDot.style.background = subject ? (subject.color || "#38bdf8") : "#38bdf8";
+    flipCard.style.setProperty("--subject-color", subject ? (subject.color || "#38bdf8") : "#38bdf8");
+
+    const decks = loadDecks();
+    cards = decks[subjectSelect.value] || [];
+
+    if (!cards.length) {
+        showEmpty(
+            "No cards yet",
+            `You haven't added any flashcards for "${subjectSelect.value}" yet.`,
+            "Add cards →",
+            `flashcards-manage.html?subject=${encodeURIComponent(subjectSelect.value)}`
+        );
+        return;
     }
 
-    question.innerText =
-        cards[currentIndex].q;
+    hideEmpty();
 
-    answer.innerText =
-        cards[currentIndex].a;
+    if (currentIndex >= cards.length) currentIndex = 0;
 
-    answer.style.display = "none";
-
-    currentIndex++;
+    showCard(currentIndex);
 }
+
+function showEmpty(title, text, ctaLabel, ctaHref) {
+
+    deckStack.style.display = "none";
+    progressRow.style.display = "none";
+    controlsRow.style.display = "none";
+
+    emptyTitle.textContent = title;
+    emptyText.textContent = text;
+    emptyCta.textContent = ctaLabel;
+    emptyCta.href = ctaHref;
+
+    emptyState.style.display = "flex";
+}
+
+function hideEmpty() {
+    emptyState.style.display = "none";
+    deckStack.style.display = "block";
+    progressRow.style.display = "flex";
+    controlsRow.style.display = "flex";
+}
+
+function showCard(index) {
+
+    isFlipped = false;
+    flipCardInner.classList.remove("flipped");
+
+    const card = cards[index];
+    questionText.textContent = card.q;
+    answerText.textContent = card.a;
+
+    progressLabel.textContent = `${index + 1} / ${cards.length}`;
+    progressFill.style.width = `${((index + 1) / cards.length) * 100}%`;
+}
+
+// ── Interactions ─────────────────────────────────────────
+function flipCardNow() {
+    if (!cards.length) return;
+    isFlipped = !isFlipped;
+    flipCardInner.classList.toggle("flipped", isFlipped);
+}
+
+function prevCard() {
+    if (!cards.length) return;
+    currentIndex = (currentIndex - 1 + cards.length) % cards.length;
+    showCard(currentIndex);
+}
+
+function nextCard() {
+    if (!cards.length) return;
+
+    const selectedSubject = subjectSelect.value;
+    let reviewed = Number(localStorage.getItem("flashcards_" + selectedSubject)) || 0;
+    reviewed++;
+    localStorage.setItem("flashcards_" + selectedSubject, reviewed);
+
+    currentIndex = (currentIndex + 1) % cards.length;
+    showCard(currentIndex);
+}
+
+// exposed for inline onclick handlers
+window.flipCard = flipCardNow;
+window.prevCard = prevCard;
+window.nextCard = nextCard;
+
+flipCard.addEventListener("click", flipCardNow);
+
+flipCard.addEventListener("keydown", (e) => {
+    if (e.code === "Space" || e.key === "Enter") {
+        e.preventDefault();
+        flipCardNow();
+    }
+});
+
+document.addEventListener("keydown", (e) => {
+    if (e.target === subjectSelect) return;
+    if (e.key === "ArrowRight") nextCard();
+    if (e.key === "ArrowLeft") prevCard();
+});
+
+subjectSelect.addEventListener("change", () => {
+    currentIndex = 0;
+    render();
+});
+
+// ── Init ──────────────────────────────────────────────────
+populateSubjectSelect();
+render();
 
 </script>
 

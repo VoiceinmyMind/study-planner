@@ -127,155 +127,6 @@ nav a:hover {
     cursor: not-allowed;
 }
 
-.setup-box {
-    width: 90%;
-    margin: auto;
-    background: #111827;
-    border-radius: 25px;
-    padding: 40px;
-    margin-bottom: 60px;
-}
-
-.setup-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 25px;
-    margin-top: 30px;
-}
-
-.setup-card {
-    background: #1e293b;
-    padding: 25px;
-    border-radius: 20px;
-}
-
-.setup-card select {
-    width: 100%;
-    margin-top: 15px;
-    padding: 12px;
-    border-radius: 10px;
-    border: none;
-    background: #334155;
-    color: white;
-}
-
-.ai-box p {
-    margin-top: 15px;
-    line-height: 1.8;
-    color: #cbd5e1;
-}
-#settingsBtn {
-    padding: 12px 20px;
-    border: none;
-    border-radius: 12px;
-    background: #38bdf8;
-    color: white;
-    cursor: pointer;
-}
-
-.setup-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.75);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 999;
-}
-
-.setup-content {
-    width: 600px;
-    background: #111827;
-    padding: 40px;
-    border-radius: 25px;
-}
-
-.setup-grid {
-    display: grid;
-    gap: 25px;
-    margin: 30px 0;
-}
-
-.setup-card {
-    background: #1e293b;
-    padding: 25px;
-    border-radius: 20px;
-}
-
-.setup-card label {
-    display: block;
-    margin-bottom: 10px;
-}
-
-.setup-card select {
-    width: 100%;
-    padding: 15px;
-    border: none;
-    border-radius: 12px;
-    background: #334155;
-    color: white;
-}
-
-#saveSetup {
-    width: 100%;
-    padding: 15px;
-    border: none;
-    border-radius: 12px;
-    background: #38bdf8;
-    color: white;
-    cursor: pointer;
-}
-
-.exam-alert {
-
-    position: absolute;
-
-    left: 60px;
-
-    top: 50%;
-
-    transform: translateY(-50%);
-
-    background: linear-gradient(
-        135deg,
-        #0f172a,
-        #111827
-    );
-
-    border: 1px solid #38bdf8;
-
-    border-left: 6px solid #38bdf8;
-
-    padding: 18px 22px;
-
-    border-radius: 18px;
-
-    box-shadow:
-        0 0 20px rgba(56,189,248,0.1);
-
-    width: fit-content;
-
-    max-width: 420px;
-}
-
-.exam-alert h3 {
-
-    margin: 0 0 8px 0;
-
-    font-size: 1.1rem;
-}
-
-.exam-alert p {
-
-    margin: 0;
-
-    color: #cbd5e1;
-
-    font-size: 0.95rem;
-
-    line-height: 1.4;
-}
-
 .top-section {
 
     position: relative;
@@ -286,18 +137,12 @@ nav a:hover {
 
     align-items: center;
 
-    padding: 40px 60px 20px;
+    padding: 60px 60px 30px;
 
-    min-height: 260px;
+    min-height: 200px;
 }
 
 .hero {
-
-    position: absolute;
-
-    left: 50%;
-
-    transform: translateX(-50%);
 
     display: flex;
 
@@ -310,8 +155,6 @@ nav a:hover {
     width: 100%;
 
     max-width: 560px;
-
-    pointer-events: none;
 }
 
 .hero h1 {
@@ -336,115 +179,14 @@ nav a:hover {
     max-width: 700px;
 }
 
-.notification-item {
-
-    padding: 10px 0;
-
-    border-bottom: 1px solid #1e293b;
-
-    font-size: 1rem;
-}
-
-.notification-item:last-child {
-
-    border-bottom: none;
-}
-
-@media (max-width: 1500px) {
-
-    .top-section {
-
-        display: grid;
-
-        grid-template-columns: minmax(220px, 320px) minmax(0, 1fr) minmax(280px, 340px);
-
-        align-items: center;
-
-        gap: 20px;
-
-        padding-top: 40px;
-
-        min-height: auto;
-    }
-
-    .hero {
-
-        position: static;
-
-        transform: none;
-
-        width: auto;
-
-        max-width: none;
-
-        grid-column: 2;
-
-        min-width: 0;
-
-        pointer-events: auto;
-    }
-
-    .exam-alert {
-
-        position: static;
-
-        transform: none;
-
-        margin-top: 0;
-
-        grid-column: 1;
-
-        max-width: none;
-    }
-
-    .todo-widget {
-
-        grid-column: 3;
-
-        margin-left: 0;
-
-        margin-right: 0;
-
-        min-width: 0;
-
-        max-width: none;
-    }
-
-    .hero h1 {
-
-        font-size: 2.5rem;
-
-        white-space: nowrap;
-    }
-
-    .hero p {
-
-        font-size: 1rem;
-
-        white-space: nowrap;
-    }
-}
-
 @media (max-width: 800px) {
 
     .top-section {
 
-        display: flex;
-
-        flex-direction: column;
-
-        align-items: center;
-
-        justify-content: center;
-
-        gap: 25px;
+        padding: 40px 30px 20px;
     }
 
-    .hero,
-    .exam-alert,
-    .todo-widget {
-
-        grid-column: auto;
+    .hero {
 
         width: 100%;
 

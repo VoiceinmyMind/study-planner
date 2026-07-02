@@ -24,46 +24,74 @@
 
     <h1>Your Subjects</h1>
 
-    <button id="resetAllBtn">
-    Reset Daily Learning
-</button>
+    <p class="subtitle">
+        Add the subjects you're studying. Set an exam date on any
+        subject and it will automatically show up on your calendar,
+        together with daily study sessions leading up to it.
+    </p>
 
-    <div class="semester-box">
+    <!-- ADD SUBJECT -->
+    <div class="add-subject-box">
 
-        <label>Select Semester</label>
+        <input type="text"
+               id="newSubjectName"
+               placeholder="e.g. Linear Algebra"
+               onkeydown="if(event.key==='Enter') addSubject()">
 
-        <select id="semesterSelect">
-
-            <option value="1">
-                Semester 1
-            </option>
-
-            <option value="2">
-                Semester 2
-            </option>
-
-            <option value="3">
-                Semester 3
-            </option>
-
-            <option value="4">
-                Semester 4
-            </option>
-
-            <option value="5">
-                Semester 5
-            </option>
-
-            <option value="6">
-                Semester 6
-            </option>
-
-        </select>
+        <button id="addSubjectBtn" onclick="addSubject()">
+            + Add Subject
+        </button>
 
     </div>
 
+    <p class="error-text" id="addError"></p>
+
     <div class="subjects-grid"
          id="subjectsGrid">
+
+    </div>
+
+    <div class="empty-state" id="emptyState">
+        <p>You haven't added any subjects yet.</p>
+        <p>Add your first one above to get started.</p>
+    </div>
+
+</div>
+
+<!-- SUBJECT SETTINGS MODAL -->
+<div class="subject-modal" id="subjectModal">
+
+    <div class="subject-modal-content">
+
+        <h2 id="modalSubjectName">Subject</h2>
+
+        <label>Color</label>
+
+        <div class="color-swatches" id="colorSwatches"></div>
+
+        <label>Exam Date</label>
+
+        <input type="date" id="examDateInput">
+
+        <div class="modal-actions">
+
+            <button id="saveSubjectBtn" onclick="saveSubjectSettings()">
+                Save
+            </button>
+
+            <button id="clearExamBtn" class="btn-secondary" onclick="clearExamDate()">
+                Clear Exam Date
+            </button>
+
+        </div>
+
+        <button id="deleteSubjectBtn" class="btn-danger" onclick="deleteSubject()">
+            Delete Subject
+        </button>
+
+        <button id="closeModalBtn" class="btn-close" onclick="closeModal()">
+            Close
+        </button>
 
     </div>
 
@@ -71,205 +99,460 @@
 
 <script>
 
-    const today =
-    new Date().toDateString();
-
-const lastReset =
-    localStorage.getItem(
-        "subjectsLastReset"
-    );
-
-// RESET EVERY NEW DAY
-if(!lastReset || lastReset !== today)  {
-
-    Object.keys(localStorage)
-        .forEach(key => {
-
-        if(key.startsWith("completed_")) {
-
-            localStorage.removeItem(key);
-
-        }
-
-    });
-
-    localStorage.setItem(
-        "subjectsLastReset",
-        today
-    );
-
-}
-
-const degree =
-    localStorage.getItem("degree");
-
-const subjects = {
-
-    informatics: {
-
-        1: [
-            "Programming 1",
-            "Mathematics",
-            "Business Management"
-        ],
-
-        2: [
-            "Databases",
-            "Web Development",
-            "Statistics"
-        ],
-
-        3: [
-            "Software Engineering",
-            "Networks",
-            "Accounting"
-        ],
-
-        4: [
-            "Cyber Security",
-            "Project Management",
-            "AI Basics"
-        ],
-
-        5: [
-            "Cloud Computing",
-            "Machine Learning",
-            "IT Consulting"
-        ],
-
-        6: [
-            "Bachelor Thesis",
-            "Business Analytics",
-            "ERP Systems"
-        ]
-
-    },
-
-    chemistry: {
-
-        1: [
-            "Organic Chemistry",
-            "Physics",
-            "Laboratory Basics"
-        ],
-
-        2: [
-            "Biochemistry",
-            "Chemical Analysis",
-            "Thermodynamics"
-        ],
-
-        3: [
-            "Inorganic Chemistry",
-            "Molecular Biology",
-            "Analytical Chemistry"
-        ],
-
-        4: [
-            "Pharmaceutical Chemistry",
-            "Environmental Chemistry",
-            "Spectroscopy"
-        ],
-
-        5: [
-            "Advanced Synthesis",
-            "Toxicology",
-            "Biotechnology"
-        ],
-
-        6: [
-            "Bachelor Thesis",
-            "Research Methods",
-            "Chemical Engineering"
-        ]
-
-    }
-
-};
-
-const semesterSelect =
-    document.getElementById("semesterSelect");
-
-const subjectsGrid =
-    document.getElementById("subjectsGrid");
+// ── Subject storage ─────────────────────────────────────
+const SUBJECT_COLORS = [
+    "#38bdf8", "#f87171", "#34d399", "#fbbf24",
+    "#a78bfa", "#f472b6", "#22d3ee", "#fb923c"
+];
 
 function loadSubjects() {
-
-    subjectsGrid.innerHTML = "";
-
-    const semester =
-        semesterSelect.value;
-
-    const semesterSubjects =
-        subjects[degree][semester] || [];
-
-    semesterSubjects.forEach(subject => {
-
-        const completed =
-    localStorage.getItem(subject);
-
-        const card =
-            document.createElement("a");
-
-        card.href =
-            `timer.html?subject=${subject}`;
-
-        card.className =
-            "subject-card";
-
-        card.innerHTML = `
-
-            <h2>${subject}</h2>
-
-            <p>
-                30 Minute Study Session
-            </p>
-
-            ${completed ?
-                '<span class="check">✔ Completed</span>'
-                :
-                ''
-            }
-
-        `;
-
-        subjectsGrid.appendChild(card);
-
-    });
-
+    return JSON.parse(localStorage.getItem("subjects") || "[]");
 }
 
-semesterSelect.addEventListener(
-    "change",
-    loadSubjects
-);
+function saveSubjects(subjects) {
+    localStorage.setItem("subjects", JSON.stringify(subjects));
+}
 
-const resetBtn =
-    document.getElementById(
-        "resetAllBtn"
-    );
+function makeId() {
+    return "s_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
 
-resetBtn.onclick = () => {
+// ── Daily reset of "completed today" state ──────────────
+const today = new Date().toDateString();
+const lastReset = localStorage.getItem("subjectsLastReset");
 
-    Object.keys(localStorage)
-        .forEach(key => {
+if (!lastReset || lastReset !== today) {
 
-        if(
-            localStorage.getItem(key)
-            === "completed"
-        ) {
-
-            localStorage.removeItem(key);
-
+    loadSubjects().forEach(subject => {
+        if (localStorage.getItem(subject.name) === "completed") {
+            localStorage.removeItem(subject.name);
         }
-
     });
 
-    location.reload();
+    localStorage.setItem("subjectsLastReset", today);
+}
 
-};
+// ── Calendar helpers (same format as calendar.html) ─────
+function dateKeyFromDate(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
-loadSubjects();
+function loadCalTodos(key) {
+    return JSON.parse(localStorage.getItem("cal_todos_" + key) || "[]");
+}
+
+function saveCalTodos(key, todos) {
+    localStorage.setItem("cal_todos_" + key, JSON.stringify(todos));
+}
+
+// Tuesday and Friday are treated as work days with a fixed
+// work block, so study sessions start later on those days.
+const WORK_DAYS = [2, 5]; // 0 = Sunday … 6 = Saturday
+const WORK_DAY_STUDY_START = 17 * 60;   // 17:00 on work days
+const FREE_DAY_STUDY_START = 12 * 60;   // 12:00 on free days
+
+function isWorkDay(date) {
+    return WORK_DAYS.includes(date.getDay());
+}
+
+function formatTime(hour, minute) {
+    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+// ── Find the next free 30-minute slot from a preferred time ─
+function findNextFreeSlot(todos, preferredStartMinutes) {
+
+    const taken = todos
+        .filter(t => typeof t.startMinutes === "number")
+        .map(t => t.startMinutes)
+        .sort((a, b) => a - b);
+
+    let slot = preferredStartMinutes;
+
+    while (taken.includes(slot)) {
+        slot += 30;
+    }
+
+    return slot;
+}
+
+// ── Generate study sessions: 30 min per day until the exam ─
+function generateStudySessions(subject, examDateStr) {
+
+    const examDate = new Date(examDateStr);
+    examDate.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (examDate <= today) return;
+
+    let cursor = new Date(today);
+
+    while (cursor < examDate) {
+
+        const key = dateKeyFromDate(cursor);
+        const todos = loadCalTodos(key);
+
+        const alreadyExists = todos.some(t => t.studySubject === subject);
+
+        if (!alreadyExists) {
+
+            const defaultStartMinutes = isWorkDay(cursor)
+                ? WORK_DAY_STUDY_START
+                : FREE_DAY_STUDY_START;
+
+            const startMinutes = findNextFreeSlot(todos, defaultStartMinutes);
+
+            const time = formatTime(
+                Math.floor(startMinutes / 60),
+                startMinutes % 60
+            );
+
+            todos.push({
+                text: `📘 ${time} – Study session: ${subject} (30 min)`,
+                color: "#38bdf8",
+                done: false,
+                studySubject: subject,
+                startMinutes: startMinutes
+            });
+
+            saveCalTodos(key, todos);
+        }
+
+        cursor.setDate(cursor.getDate() + 1);
+    }
+}
+
+// ── Remove study sessions for a subject again ───────────
+function removeStudySessions(subject) {
+
+    Object.keys(localStorage).forEach(storageKey => {
+
+        if (!storageKey.startsWith("cal_todos_")) return;
+
+        const todos = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        const filtered = todos.filter(t => t.studySubject !== subject);
+
+        if (filtered.length !== todos.length) {
+            localStorage.setItem(storageKey, JSON.stringify(filtered));
+
+            const dateKey = storageKey.replace("cal_todos_", "");
+            compactStudySessions(dateKey);
+        }
+    });
+}
+
+// ── Close time gaps between study sessions on a day ─────
+function compactStudySessions(key) {
+
+    const todos = loadCalTodos(key);
+
+    const studyEntries = todos.filter(t => t.studySubject);
+    if (!studyEntries.length) return;
+
+    studyEntries.sort((a, b) => {
+        const ta = typeof a.startMinutes === "number" ? a.startMinutes : Infinity;
+        const tb = typeof b.startMinutes === "number" ? b.startMinutes : Infinity;
+        return ta - tb;
+    });
+
+    const fixedEntries = todos.filter(t => !t.studySubject);
+
+    const [y, m, d] = key.split("-").map(Number);
+    const dateForKey = new Date(y, m - 1, d);
+    const defaultStartMinutes = isWorkDay(dateForKey)
+        ? WORK_DAY_STUDY_START
+        : FREE_DAY_STUDY_START;
+
+    const placed = [];
+
+    studyEntries.forEach(entry => {
+
+        const startMinutes = findNextFreeSlot(
+            fixedEntries.concat(placed),
+            defaultStartMinutes
+        );
+
+        entry.startMinutes = startMinutes;
+
+        const time = formatTime(
+            Math.floor(startMinutes / 60),
+            startMinutes % 60
+        );
+
+        entry.text = entry.text.replace(/^📘 \d{2}:\d{2}/, `📘 ${time}`);
+
+        placed.push(entry);
+    });
+
+    saveCalTodos(key, fixedEntries.concat(studyEntries));
+}
+
+// ── Add the exam itself to the calendar ─────────────────
+function addExamEntry(subject, examDateStr) {
+
+    const examDate = new Date(examDateStr);
+    examDate.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (examDate < today) return;
+
+    const key = dateKeyFromDate(examDate);
+    const todos = loadCalTodos(key);
+
+    const alreadyExists = todos.some(t => t.examSubject === subject);
+    if (alreadyExists) return;
+
+    todos.unshift({
+        text: `📝 Exam: ${subject}`,
+        color: "#f87171",
+        done: false,
+        examSubject: subject
+    });
+
+    saveCalTodos(key, todos);
+}
+
+// ── Remove the exam entry for a subject again ───────────
+function removeExamEntry(subject) {
+
+    Object.keys(localStorage).forEach(key => {
+
+        if (!key.startsWith("cal_todos_")) return;
+
+        const todos = JSON.parse(localStorage.getItem(key) || "[]");
+        const filtered = todos.filter(t => t.examSubject !== subject);
+
+        if (filtered.length !== todos.length) {
+            localStorage.setItem(key, JSON.stringify(filtered));
+        }
+    });
+}
+
+// ── Rendering ────────────────────────────────────────────
+const subjectsGrid = document.getElementById("subjectsGrid");
+const emptyState = document.getElementById("emptyState");
+
+function daysUntil(dateStr) {
+    const target = new Date(dateStr);
+    target.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+}
+
+function renderSubjects() {
+
+    const subjects = loadSubjects();
+
+    subjectsGrid.innerHTML = "";
+    emptyState.style.display = subjects.length ? "none" : "block";
+
+    subjects.forEach(subject => {
+
+        const completed = localStorage.getItem(subject.name) === "completed";
+
+        let examBadge = '<span class="exam-badge none">No exam date set</span>';
+
+        if (subject.examDate) {
+
+            const diff = daysUntil(subject.examDate);
+            let urgency = "far";
+
+            if (diff < 0) urgency = "past";
+            else if (diff <= 3) urgency = "close";
+            else if (diff <= 14) urgency = "soon";
+
+            const label = diff < 0
+                ? `Exam was on ${subject.examDate}`
+                : diff === 0
+                    ? `Exam today (${subject.examDate})`
+                    : `Exam in ${diff}d (${subject.examDate})`;
+
+            examBadge = `<span class="exam-badge ${urgency}">📝 ${label}</span>`;
+        }
+
+        const card = document.createElement("div");
+        card.className = "subject-card";
+        card.style.setProperty("--subject-color", subject.color || "#38bdf8");
+
+        card.innerHTML = `
+            <div class="subject-color-bar"></div>
+            <div class="subject-card-body">
+                <h2>${subject.name}</h2>
+                ${examBadge}
+                ${completed ? '<span class="check">✔ Completed today</span>' : ''}
+                <div class="subject-card-actions">
+                    <a href="timer.html?subject=${encodeURIComponent(subject.name)}" class="btn-start">
+                        Start 30 min Session →
+                    </a>
+                    <button class="btn-settings" data-id="${subject.id}">
+                        ⚙ Settings
+                    </button>
+                </div>
+            </div>
+        `;
+
+        card.querySelector(".btn-settings").onclick = () => openModal(subject.id);
+
+        subjectsGrid.appendChild(card);
+    });
+}
+
+// ── Add subject ──────────────────────────────────────────
+function addSubject() {
+
+    const input = document.getElementById("newSubjectName");
+    const errorText = document.getElementById("addError");
+    const name = input.value.trim();
+
+    errorText.textContent = "";
+
+    if (!name) {
+        errorText.textContent = "Please enter a subject name.";
+        return;
+    }
+
+    const subjects = loadSubjects();
+
+    const exists = subjects.some(
+        s => s.name.toLowerCase() === name.toLowerCase()
+    );
+
+    if (exists) {
+        errorText.textContent = "You already have a subject with this name.";
+        return;
+    }
+
+    const color = SUBJECT_COLORS[subjects.length % SUBJECT_COLORS.length];
+
+    subjects.push({
+        id: makeId(),
+        name: name,
+        color: color,
+        examDate: null
+    });
+
+    saveSubjects(subjects);
+
+    input.value = "";
+    renderSubjects();
+}
+
+// ── Settings modal ──────────────────────────────────────
+const modal = document.getElementById("subjectModal");
+let activeSubjectId = null;
+
+function openModal(id) {
+
+    activeSubjectId = id;
+
+    const subjects = loadSubjects();
+    const subject = subjects.find(s => s.id === id);
+    if (!subject) return;
+
+    document.getElementById("modalSubjectName").textContent = subject.name;
+    document.getElementById("examDateInput").value = subject.examDate || "";
+
+    const swatches = document.getElementById("colorSwatches");
+    swatches.innerHTML = "";
+
+    SUBJECT_COLORS.forEach(color => {
+
+        const dot = document.createElement("div");
+        dot.className = "color-dot" + (subject.color === color ? " selected" : "");
+        dot.style.background = color;
+        dot.dataset.color = color;
+
+        dot.onclick = () => {
+            swatches.querySelectorAll(".color-dot").forEach(d => d.classList.remove("selected"));
+            dot.classList.add("selected");
+        };
+
+        swatches.appendChild(dot);
+    });
+
+    modal.style.display = "flex";
+}
+
+function closeModal() {
+    modal.style.display = "none";
+    activeSubjectId = null;
+}
+
+function saveSubjectSettings() {
+
+    if (!activeSubjectId) return;
+
+    const subjects = loadSubjects();
+    const subject = subjects.find(s => s.id === activeSubjectId);
+    if (!subject) return;
+
+    const newExamDate = document.getElementById("examDateInput").value || null;
+    const selectedDot = document.querySelector("#colorSwatches .color-dot.selected");
+    const newColor = selectedDot ? selectedDot.dataset.color : subject.color;
+
+    const oldExamDate = subject.examDate;
+
+    // If the exam date changed, sync the calendar accordingly
+    if (oldExamDate !== newExamDate) {
+
+        if (oldExamDate) {
+            removeStudySessions(subject.name);
+            removeExamEntry(subject.name);
+        }
+
+        if (newExamDate) {
+            generateStudySessions(subject.name, newExamDate);
+            addExamEntry(subject.name, newExamDate);
+        }
+    }
+
+    subject.examDate = newExamDate;
+    subject.color = newColor;
+
+    saveSubjects(subjects);
+
+    closeModal();
+    renderSubjects();
+}
+
+function clearExamDate() {
+    document.getElementById("examDateInput").value = "";
+    saveSubjectSettings();
+}
+
+function deleteSubject() {
+
+    if (!activeSubjectId) return;
+
+    const subjects = loadSubjects();
+    const subject = subjects.find(s => s.id === activeSubjectId);
+    if (!subject) return;
+
+    if (!confirm(`Delete "${subject.name}"? This also removes its exam and study sessions from the calendar.`)) {
+        return;
+    }
+
+    if (subject.examDate) {
+        removeStudySessions(subject.name);
+        removeExamEntry(subject.name);
+    }
+
+    localStorage.removeItem(subject.name);
+    localStorage.removeItem("flashcards_" + subject.name);
+
+    const remaining = subjects.filter(s => s.id !== activeSubjectId);
+    saveSubjects(remaining);
+
+    closeModal();
+    renderSubjects();
+}
+
+renderSubjects();
 
 </script>
 

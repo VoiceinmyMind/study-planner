@@ -62,40 +62,6 @@
 
         <div>
 
-            <label>Select Semester</label>
-
-            <select id="semesterSelect">
-
-                <option value="1">
-                    Semester 1
-                </option>
-
-                <option value="2">
-                    Semester 2
-                </option>
-
-                <option value="3">
-                    Semester 3
-                </option>
-
-                <option value="4">
-                    Semester 4
-                </option>
-
-                <option value="5">
-                    Semester 5
-                </option>
-
-                <option value="6">
-                    Semester 6
-                </option>
-
-            </select>
-
-        </div>
-
-        <div>
-
             <label>Select Subject</label>
 
             <select id="subjectSelect"></select>
@@ -137,115 +103,43 @@
 
 <script>
 
-const degree =
-    localStorage.getItem("degree");
-
-const subjects = {
-
-    informatics: {
-
-        1: [
-            "Programming 1",
-            "Mathematics",
-            "Business Management"
-        ],
-
-        2: [
-            "Databases",
-            "Web Development",
-            "Statistics"
-        ],
-
-        3: [
-            "Software Engineering",
-            "Networks",
-            "Accounting"
-        ],
-
-        4: [
-            "Cyber Security",
-            "Project Management",
-            "AI Basics"
-        ],
-
-        5: [
-            "Cloud Computing",
-            "Machine Learning",
-            "IT Consulting"
-        ],
-
-        6: [
-            "Bachelor Thesis",
-            "Business Analytics",
-            "ERP Systems"
-        ]
-
-    },
-
-    chemistry: {
-
-        1: [
-            "Organic Chemistry",
-            "Physics",
-            "Laboratory Basics"
-        ],
-
-        2: [
-            "Biochemistry",
-            "Chemical Analysis",
-            "Thermodynamics"
-        ],
-
-        3: [
-            "Inorganic Chemistry",
-            "Molecular Biology",
-            "Analytical Chemistry"
-        ],
-
-        4: [
-            "Pharmaceutical Chemistry",
-            "Environmental Chemistry",
-            "Spectroscopy"
-        ],
-
-        5: [
-            "Advanced Synthesis",
-            "Toxicology",
-            "Biotechnology"
-        ],
-
-        6: [
-            "Bachelor Thesis",
-            "Research Methods",
-            "Chemical Engineering"
-        ]
-
-    }
-
-};
-
-const semesterSelect =
-    document.getElementById("semesterSelect");
+// Subjects are read from the ones the user added on the
+// Subjects page (localStorage "subjects").
+function loadUserSubjects() {
+    return JSON.parse(localStorage.getItem("subjects") || "[]");
+}
 
 const subjectSelect =
     document.getElementById("subjectSelect");
 
 function loadSubjects() {
 
-    const semester =
-        semesterSelect.value;
-
     subjectSelect.innerHTML = "";
 
-    const semesterSubjects =
-        subjects[degree][semester] || [];
+    const userSubjects = loadUserSubjects();
 
-    semesterSubjects.forEach(subject => {
+    if (!userSubjects.length) {
 
         const option =
             document.createElement("option");
 
-        option.textContent = subject;
+        option.textContent = "No subjects yet – add one first";
+        option.value = "";
+
+        subjectSelect.appendChild(option);
+
+        updateStats();
+
+        return;
+    }
+
+    userSubjects.forEach(subject => {
+
+        const option =
+            document.createElement("option");
+
+        option.textContent = subject.name;
+        option.value = subject.name;
 
         subjectSelect.appendChild(option);
 
@@ -254,11 +148,6 @@ function loadSubjects() {
     updateStats();
 
 }
-
-semesterSelect.addEventListener(
-    "change",
-    loadSubjects
-);
 
 subjectSelect.addEventListener(
     "change",
